@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Mr. Handyman Onboarding Checklist</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <main>
+      <header>
+        <h1>Mr. Handyman Franchise Verification Checklist</h1>
+        <p>
+          Use this interactive tool to confirm the Blue Star requirements for
+          Mr. Handyman. Progress is saved locally so you can revisit and
+          continue verifying configurations as needed.
+        </p>
+      </header>
+
+      <section class="progress" aria-live="polite">
+        <h2>Overall Progress</h2>
+        <div class="progress-bar" role="progressbar" aria-valuemin="0" aria-valuemax="100">
+          <div class="progress-bar__fill"></div>
+        </div>
+        <p class="progress__summary"></p>
+      </section>
+
+      <section class="controls">
+        <button id="btn-clear" type="button" class="secondary">
+          Clear Saved Progress
+        </button>
+        <button id="btn-preview" type="button">
+          Environment Preview
+        </button>
+      </section>
+
+      <div id="checklist" class="checklist" aria-live="polite"></div>
+    </main>
+
+    <div
+      id="preview-overlay"
+      class="preview"
+      role="dialog"
+      aria-modal="true"
+      aria-hidden="true"
+      aria-labelledby="preview-title"
+      aria-describedby="preview-description"
+      hidden
+    >
+      <div class="preview__backdrop" data-preview-close></div>
+      <div class="preview__dialog" role="document" tabindex="-1">
+        <header class="preview__header">
+          <h2 id="preview-title">Environment Preview</h2>
+          <button
+            type="button"
+            class="preview__close"
+            aria-label="Close environment preview"
+            data-preview-close
+          >
+            ×
+          </button>
+        </header>
+        <p id="preview-description" class="preview__description">
+          Snapshot of the current checklist configuration. Use the Environment Preview
+          to review completed and pending items without making changes.
+        </p>
+        <div class="preview__body"></div>
+      </div>
+    </div>
+
+    <template id="task-template">
+      <div class="task" data-task-id="">
+        <label>
+          <input type="checkbox" />
+          <span class="task__text"></span>
+        </label>
+        <details class="task__details">
+          <summary>Details &amp; Notes</summary>
+          <div class="task__description"></div>
+        </details>
+      </div>
+    </template>
+
+    <template id="option-template">
+      <fieldset class="options" data-group-id="">
+        <legend></legend>
+      </fieldset>
+    </template>
+
+    <template id="radio-template">
+      <label class="option">
+        <input type="radio" name="" value="" />
+        <span class="option__label"></span>
+      </label>
+    </template>
+
+    <template id="checkbox-template">
+      <label class="option">
+        <input type="checkbox" value="" />
+        <span class="option__label"></span>
+      </label>
+    </template>
+
+    <template id="section-template">
+      <section class="section">
+        <header class="section__header">
+          <h2 class="section__title"></h2>
+          <div class="section__actions">
+            <button type="button" class="btn-suggest" aria-label="Get AI suggestions for this section">
+              AI Suggestions
+            </button>
+            <button type="button" class="btn-crosscheck" aria-label="Run cross-check for this section">
+              Cross-check
+            </button>
+          </div>
+        </header>
+        <p class="section__intro"></p>
+        <div class="section__content"></div>
+        <div class="section__insights" aria-live="polite"></div>
+      </section>
+    </template>
+
+    <script src="script.js"></script>
+  </body>
+</html>
