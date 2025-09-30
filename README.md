@@ -4,17 +4,17 @@ This project provides an interactive checklist to verify the Blue Star requireme
 
 ## Getting started
 
-You can run the checklist locally with any static file server. Two easy options are:
+You can now run the checklist locally with a single command thanks to the included development server.
 
 ```bash
-# Option 1: using Python (3.x)
-python3 -m http.server 4173
-
-# Option 2: using Node.js (via npx)
-npx serve . -l 4173
+npm install
+npm start
 ```
 
-Then open [http://localhost:4173/index.html](http://localhost:4173/index.html) in your browser.
+This spins up `lite-server` on [http://localhost:4173](http://localhost:4173) and automatically reloads the page when you make edits
+to the files inside the `public/` directory.
+
+If you prefer not to install dependencies, any static file server pointed at `public/` will work as well.
 
 ## Environment preview
 

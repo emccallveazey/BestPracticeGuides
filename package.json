@@ -1,0 +1,14 @@
+{
+  "name": "mr-handyman-checklist",
+  "version": "1.0.0",
+  "description": "Interactive Mr. Handyman verification checklist",
+  "scripts": {
+    "start": "npm run serve",
+    "serve": "lite-server"
+  },
+  "author": "",
+  "license": "MIT",
+  "devDependencies": {
+    "lite-server": "^2.6.1"
+  }
+}
