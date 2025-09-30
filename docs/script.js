@@ -649,6 +649,98 @@ let previewLastFocusable = null;
 let livePreviewContainer = null;
 let livePreviewBody = null;
 let latestPreviewSnapshot = null;
+let demoOverlay = null;
+let demoDialog = null;
+let demoStepIndicator = null;
+let demoStepTitle = null;
+let demoStepText = null;
+let demoPrevButton = null;
+let demoNextButton = null;
+let demoCloseButtons = [];
+let demoCurrentStep = 0;
+let demoActive = false;
+let demoStateBackup = null;
+let demoHighlightedElement = null;
+let demoHideTimer = null;
+let demoReturnFocus = null;
+
+const demoSamplePayload = {
+  tasks: {
+    'daytime-frame': true,
+    'holiday-frame': true,
+    'queue-created': true,
+    'queue-moh': true,
+    'queue-timeout': true,
+    'user-created': true,
+    'user-unanswered': true,
+    'user-failover': true,
+    'after-hours-rule': true,
+    'holiday-rule': true,
+    'voicemail-disabled': true,
+    'extension-config': true,
+    'call-recording': true,
+    'default-moh': true,
+  },
+  options: {
+    'after-hours-destination': 'answering-service',
+    'queue-failover': 'answering-service',
+    'user-unanswered-option': 'queue-301',
+  },
+  closing: {
+    'installation-confirmation': { response: 'yes' },
+    'test-calls': { response: 'yes' },
+    'devices-online': { response: 'yes' },
+    'porting-poc': {
+      response: 'yes',
+      note: 'Confirmed needs met and sent handoff email',
+    },
+    'portal-training': { response: 'yes', note: 'Owner and office manager' },
+    summary: { response: 'yes' },
+    'network-overview': {
+      response: 'yes',
+      note: 'Spectrum → Motorola SB6121 → RRT200 → Stemeo POE104 → Poly VVX350',
+    },
+    'failover-tested': { response: 'no', note: 'Awaiting failover hardware delivery' },
+  },
+};
+
+const demoSteps = [
+  {
+    id: 'progress',
+    target: '.progress',
+    title: 'Track overall progress',
+    description:
+      'The progress bar updates automatically as you check off items, showing stakeholders how much of the launch plan is complete.',
+  },
+  {
+    id: 'timeframes',
+    target: '.section[data-section-id="time-frames"]',
+    title: 'Review AI suggestions and cross-checks',
+    description:
+      'Each section provides AI suggestions and cross-check callouts. Use them to confirm holiday routing and other time frame details before go-live.',
+  },
+  {
+    id: 'closing',
+    target: '.section[data-section-id="user-300"] .closing-checklist',
+    title: 'Capture installation sign-off',
+    description:
+      'The closing checklist stores franchise sign-off responses and notes so you can document why any remaining items are pending.',
+  },
+  {
+    id: 'share',
+    target: '#btn-share',
+    title: 'Generate a shareable link',
+    description:
+      'Share Progress Link packages the current state into a URL for teammates or leadership. Copy it directly or open the Web Share dialog.',
+  },
+  {
+    id: 'preview',
+    target: '#live-preview',
+    title: 'Show the environment preview',
+    description:
+      'The live environment preview summarizes completion counts, cross-check results, and guidance so you can present readiness in real time.',
+  },
+];
 
 function clearShareStatus() {
   if (!shareStatusElement) return;
@@ -742,6 +834,245 @@ async function shareCurrentProgress() {
   setShareStatus('Copy this link to share your progress.', 'warning', shareUrl);
 }
 
+function cloneDemoState(state) {
+  try {
+    return JSON.parse(
+      JSON.stringify(
+        state || {
+          tasks: {},
+          options: {},
+          closing: {},
+        }
+      )
+    );
+  } catch (error) {
+    console.warn('Unable to clone checklist state for demo backup.', error);
+    return { tasks: {}, options: {}, closing: {} };
+  }
+}
+
+function applyDemoPayload(payload) {
+  applySharedStatePayload(savedState, payload);
+  storage.save(savedState);
+  renderChecklist();
+  updateProgress();
+}
+
+function restoreStateFromBackup(backup) {
+  const source = backup || { tasks: {}, options: {}, closing: {} };
+
+  savedState.tasks = {};
+  if (source.tasks && typeof source.tasks === 'object') {
+    Object.entries(source.tasks).forEach(([id, value]) => {
+      if (value) {
+        savedState.tasks[id] = true;
+      }
+    });
+  }
+
+  savedState.options = {};
+  if (source.options && typeof source.options === 'object') {
+    Object.entries(source.options).forEach(([id, value]) => {
+      if (Array.isArray(value)) {
+        savedState.options[id] = [...value];
+      } else if (value !== undefined && value !== null) {
+        savedState.options[id] = value;
+      }
+    });
+  }
+
+  savedState.closing = {};
+  if (source.closing && typeof source.closing === 'object') {
+    Object.entries(source.closing).forEach(([id, value]) => {
+      if (!value || typeof value !== 'object') return;
+      const entry = {};
+      if (value.response) entry.response = value.response;
+      if (value.note) entry.note = value.note;
+      if (entry.response || entry.note) {
+        savedState.closing[id] = entry;
+      }
+    });
+  }
+
+  storage.save(savedState);
+  renderChecklist();
+  updateProgress();
+}
+
+function clearDemoHighlight() {
+  if (demoHighlightedElement) {
+    demoHighlightedElement.classList.remove('demo-highlight');
+    demoHighlightedElement = null;
+  }
+}
+
+function highlightDemoTarget(selector) {
+  clearDemoHighlight();
+  if (!selector) return;
+
+  const element = document.querySelector(selector);
+  if (!element) {
+    return;
+  }
+
+  element.classList.add('demo-highlight');
+  if (typeof element.scrollIntoView === 'function') {
+    element.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'nearest' });
+  }
+  demoHighlightedElement = element;
+}
+
+function updateDemoControls() {
+  if (!demoActive) {
+    return;
+  }
+
+  const totalSteps = demoSteps.length;
+  const currentIndex = Math.min(Math.max(demoCurrentStep, 0), totalSteps - 1);
+  const step = demoSteps[currentIndex];
+
+  if (demoStepIndicator) {
+    demoStepIndicator.textContent = `Step ${currentIndex + 1} of ${totalSteps}`;
+  }
+  if (demoStepTitle) {
+    demoStepTitle.textContent = step ? step.title : '';
+  }
+  if (demoStepText) {
+    demoStepText.textContent = step ? step.description : '';
+  }
+
+  if (demoPrevButton) {
+    demoPrevButton.disabled = currentIndex === 0;
+  }
+
+  if (demoNextButton) {
+    demoNextButton.textContent = currentIndex === totalSteps - 1 ? 'Finish' : 'Next';
+  }
+
+  if (step && step.target) {
+    highlightDemoTarget(step.target);
+  } else {
+    clearDemoHighlight();
+  }
+}
+
+function goToDemoStep(index) {
+  if (!demoActive) {
+    return;
+  }
+
+  demoCurrentStep = Math.min(Math.max(index, 0), demoSteps.length - 1);
+  updateDemoControls();
+}
+
+function openDemoOverlay() {
+  if (!demoOverlay) return;
+
+  if (demoHideTimer) {
+    clearTimeout(demoHideTimer);
+    demoHideTimer = null;
+  }
+
+  demoOverlay.hidden = false;
+  requestAnimationFrame(() => {
+    demoOverlay.setAttribute('aria-hidden', 'false');
+  });
+  document.body.classList.add('no-scroll');
+
+  const focusTarget = demoDialog || demoOverlay;
+  if (focusTarget && typeof focusTarget.focus === 'function') {
+    focusTarget.focus();
+  }
+
+  document.addEventListener('keydown', handleDemoKeydown);
+}
+
+function closeDemoOverlay() {
+  if (!demoOverlay) return;
+
+  demoOverlay.setAttribute('aria-hidden', 'true');
+  if (demoHideTimer) {
+    clearTimeout(demoHideTimer);
+  }
+  demoHideTimer = setTimeout(() => {
+    demoOverlay.hidden = true;
+    demoHideTimer = null;
+  }, 200);
+
+  document.body.classList.remove('no-scroll');
+  document.removeEventListener('keydown', handleDemoKeydown);
+}
+
+function handleDemoKeydown(event) {
+  if (!demoActive) {
+    return;
+  }
+
+  if (event.key === 'Escape') {
+    event.preventDefault();
+    endDemoPresentation();
+    return;
+  }
+
+  if (event.key === 'ArrowRight') {
+    event.preventDefault();
+    if (demoCurrentStep < demoSteps.length - 1) {
+      goToDemoStep(demoCurrentStep + 1);
+    } else {
+      endDemoPresentation();
+    }
+  } else if (event.key === 'ArrowLeft') {
+    event.preventDefault();
+    if (demoCurrentStep > 0) {
+      goToDemoStep(demoCurrentStep - 1);
+    }
+  }
+}
+
+function startDemoPresentation() {
+  if (demoActive) {
+    goToDemoStep(0);
+    return;
+  }
+
+  demoActive = true;
+  demoReturnFocus = document.activeElement;
+  demoStateBackup = cloneDemoState(savedState);
+  applyDemoPayload(demoSamplePayload);
+
+  if (shareStatusElement) {
+    setShareStatus(
+      'Presentation demo loaded example data. Advance through the walkthrough or end the demo to restore your saved work.',
+      'info'
+    );
+  }
+
+  openDemoOverlay();
+  goToDemoStep(0);
+}
+
+function endDemoPresentation() {
+  if (!demoActive) {
+    return;
+  }
+
+  demoActive = false;
+  closeDemoOverlay();
+  clearDemoHighlight();
+  restoreStateFromBackup(demoStateBackup);
+  demoStateBackup = null;
+
+  if (shareStatusElement) {
+    setShareStatus('Presentation demo closed. Your saved progress has been restored.', 'success');
+  }
+
+  const focusTarget = demoReturnFocus && typeof demoReturnFocus.focus === 'function' ? demoReturnFocus : null;
+  demoReturnFocus = null;
+  if (focusTarget) {
+    focusTarget.focus();
+  }
+}
+
 function isElementVisible(element) {
   if (!element) return false;
   if (element.hasAttribute('hidden') || element.closest('[hidden]')) {
@@ -805,6 +1136,12 @@ function renderChecklist() {
   const optionTemplate = document.getElementById('option-template');
   const radioTemplate = document.getElementById('radio-template');
   const checkboxTemplate = document.getElementById('checkbox-template');
+
+  if (!container) {
+    return;
+  }
+
+  container.innerHTML = '';
 
   checklistData.forEach((section) => {
     const sectionFragment = sectionTemplate.content.cloneNode(true);
@@ -1012,6 +1349,12 @@ function renderChecklist() {
     container.appendChild(sectionFragment);
   });
 
+  if (demoActive) {
+    requestAnimationFrame(() => {
+      goToDemoStep(demoCurrentStep);
+    });
+  }
+
   refreshSectionInsights();
 }
 
@@ -1130,6 +1473,11 @@ function bindControls() {
     });
   }
 
+  const demoButton = document.getElementById('btn-demo');
+  if (demoButton) {
+    demoButton.addEventListener('click', startDemoPresentation);
+  }
+
   document.querySelectorAll('[data-preview-close]').forEach((element) => {
     element.addEventListener('click', closePreview);
   });
@@ -1152,6 +1500,38 @@ function init() {
       }
     });
   }
+
+  demoOverlay = document.getElementById('demo-overlay');
+  if (demoOverlay) {
+    demoDialog = demoOverlay.querySelector('.demo__dialog');
+    demoStepIndicator = demoOverlay.querySelector('.demo__step-indicator');
+    demoStepTitle = demoOverlay.querySelector('.demo__step-title');
+    demoStepText = demoOverlay.querySelector('.demo__step-text');
+    demoPrevButton = demoOverlay.querySelector('[data-demo-prev]');
+    demoNextButton = demoOverlay.querySelector('[data-demo-next]');
+    demoCloseButtons = Array.from(demoOverlay.querySelectorAll('[data-demo-close]'));
+
+    if (demoPrevButton) {
+      demoPrevButton.addEventListener('click', () => {
+        goToDemoStep(demoCurrentStep - 1);
+      });
+    }
+
+    if (demoNextButton) {
+      demoNextButton.addEventListener('click', () => {
+        if (demoCurrentStep >= demoSteps.length - 1) {
+          endDemoPresentation();
+        } else {
+          goToDemoStep(demoCurrentStep + 1);
+        }
+      });
+    }
+
+    demoCloseButtons.forEach((element) => {
+      element.addEventListener('click', endDemoPresentation);
+    });
+  }
+
   updateProgress();
 }
 

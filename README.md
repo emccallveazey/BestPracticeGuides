@@ -33,6 +33,6 @@ The **User 300 Routing** section now includes a structured closing checklist so 
 
 When you’re ready to hand progress to another teammate, choose **Share Progress Link**. The app will generate a unique URL that captures the current checklist selections. Copy or share the link so others can load the same state instantly—once opened, the shared progress is stored locally on their device so they can continue working.
 
-## AI guidance and interactive demo
+## AI guidance and presentation demo
 
-Each section’s **AI Suggestions** link opens ChatGPT in a new tab so you can ask follow-up questions or craft implementation notes. The **Interactive Demo** control launches a fresh copy of the checklist in another tab so you can share the experience or reset quickly for training sessions.
+Each section’s **AI Suggestions** link opens ChatGPT in a new tab so you can ask follow-up questions or craft implementation notes. The new **Presentation Demo** button loads a guided walkthrough with sample data so you can highlight progress tracking, cross-checks, sharing, and previews during live presentations. End the demo at any time to return to your saved progress.
