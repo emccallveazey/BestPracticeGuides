@@ -4,17 +4,22 @@ This project provides an interactive checklist to document Mr. Handyman best pra
 
 ## Getting started
 
-You can now run the checklist locally with a single command thanks to the included development server.
+The project now runs as a desktop application powered by Electron so franchise teams can launch the checklist locally without a browser or additional hosting.
 
 ```bash
 npm install
 npm start
 ```
 
-This spins up `lite-server` on [http://localhost:4173](http://localhost:4173) and automatically reloads the page when you make edits
-to the files inside the `public/` directory.
+`npm start` opens the desktop window and automatically serves the interactive checklist inside a bundled Chromium runtime.
 
-If you prefer not to install dependencies, any static file server pointed at `public/` will work as well.
+For web-based development or quick previews you can still use the lightweight development server:
+
+```bash
+npm run dev
+```
+
+This spins up `lite-server` on [http://localhost:4173](http://localhost:4173) and automatically reloads the page when you make edits to the files inside the `public/` directory.
 
 ## Environment preview
 
