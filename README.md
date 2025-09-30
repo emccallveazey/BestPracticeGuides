@@ -1,26 +1,26 @@
 # Mr. Handyman Best Practices Checklist
 
-This project provides an interactive checklist to document Mr. Handyman best practices for franchise call flows. It captures routing, time frames, and configuration choices with local storage persistence, AI suggestions, cross-check tooling, and an environment preview summary.
+This repository contains an interactive checklist that guides franchise teams through the Mr. Handyman best practices for call routing, time frames, and required configuration. The app ships as static HTML, CSS, and JavaScript so it can run entirely in the browser while persisting progress locally.
 
-## Getting started
+## Run it from GitHub Pages
 
-The project now runs as a desktop application powered by Electron so franchise teams can launch the checklist locally without a browser or additional hosting.
+1. Commit this repository to GitHub.
+2. Open the repository **Settings → Pages** configuration.
+3. Choose the `main` branch and set the publishing source to the `/docs` folder.
+4. Save the settings. GitHub Pages will build and host the interactive checklist at `https://<your-username>.github.io/<repository-name>/`.
+
+The `docs/` directory already includes the fully interactive experience—once Pages is enabled, stakeholders can visit the published URL and start using the checklist immediately.
+
+## Preview locally
+
+You can also open the checklist directly from the filesystem or serve it through any static web server. For example, with Python installed:
 
 ```bash
-npm install
-npm start
+python -m http.server --directory docs 8000
 ```
 
-`npm start` opens the desktop window and automatically serves the interactive checklist inside a bundled Chromium runtime.
-
-For web-based development or quick previews you can still use the lightweight development server:
-
-```bash
-npm run dev
-```
-
-This spins up `lite-server` on [http://localhost:4173](http://localhost:4173) and automatically reloads the page when you make edits to the files inside the `public/` directory.
+Then browse to [http://localhost:8000](http://localhost:8000) to use the checklist.
 
 ## Environment preview
 
-Select **Environment Preview** from the toolbar to review a read-only summary of the captured configuration. The preview aggregates task completion across sections and highlights items that still need attention, making it easy to share the current environment posture with stakeholders.
+Select **Environment Preview** inside the app to review a read-only summary of the captured configuration. The preview aggregates task completion across sections and highlights items that still need attention, making it easy to share the current environment posture with stakeholders.
