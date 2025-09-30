@@ -676,14 +676,14 @@ function init() {
 document.addEventListener('DOMContentLoaded', init);
 
 function computeSectionPreview(section) {
+  const helpers = createStateHelpers(section);
   const items = [];
 
-  (section.tasks || []).forEach((task) => {
-    const done = Boolean(savedState.tasks[task.id]);
+  (helpers.tasks || []).forEach((task) => {
     items.push({
       label: task.label,
-      state: done ? 'complete' : 'pending',
-      text: done ? 'Complete' : 'Needs attention',
+      state: task.completed ? 'complete' : 'pending',
+      text: task.completed ? 'Complete' : 'Needs attention',
     });
   });
 
@@ -710,11 +710,16 @@ function computeSectionPreview(section) {
     }
   });
 
+  const crossCheck = section.crossCheck ? section.crossCheck(helpers) : null;
+  const suggestion = section.suggestions ? section.suggestions(helpers) : '';
+
   return {
     title: section.title,
     completed: items.filter((item) => item.state === 'complete').length,
     total: items.length,
     items,
+    crossCheck,
+    suggestion,
   };
 }
 
@@ -778,6 +783,21 @@ function renderLivePreview(snapshot = latestPreviewSnapshot || getPreviewSnapsho
     headerEl.appendChild(progressEl);
 
     sectionEl.appendChild(headerEl);
+
+    if (section.crossCheck && section.crossCheck.message) {
+      const statusEl = document.createElement('p');
+      statusEl.className = 'live-preview__section-status';
+      statusEl.dataset.tone = section.crossCheck.tone || 'info';
+      statusEl.textContent = section.crossCheck.message;
+      sectionEl.appendChild(statusEl);
+    }
+
+    if (section.suggestion) {
+      const suggestionEl = document.createElement('p');
+      suggestionEl.className = 'live-preview__section-suggestion';
+      suggestionEl.textContent = section.suggestion;
+      sectionEl.appendChild(suggestionEl);
+    }
 
     if (section.items.length) {
       const itemsList = document.createElement('ul');
@@ -844,6 +864,21 @@ function renderPreviewContent(snapshot = latestPreviewSnapshot || getPreviewSnap
     headerEl.appendChild(progressEl);
 
     sectionEl.appendChild(headerEl);
+
+    if (section.crossCheck && section.crossCheck.message) {
+      const statusEl = document.createElement('p');
+      statusEl.className = 'preview__section-status';
+      statusEl.dataset.tone = section.crossCheck.tone || 'info';
+      statusEl.textContent = section.crossCheck.message;
+      sectionEl.appendChild(statusEl);
+    }
+
+    if (section.suggestion) {
+      const suggestionEl = document.createElement('p');
+      suggestionEl.className = 'preview__section-suggestion';
+      suggestionEl.textContent = section.suggestion;
+      sectionEl.appendChild(suggestionEl);
+    }
 
     if (section.items.length) {
       const itemsList = document.createElement('div');
