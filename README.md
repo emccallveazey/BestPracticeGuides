@@ -1,6 +1,6 @@
-# Mr. Handyman Verification Checklist
+# Mr. Handyman Best Practices Checklist
 
-This project provides an interactive checklist to verify the Blue Star requirements for Mr. Handyman franchises. It captures routing, time frames, and configuration choices with local storage persistence, AI suggestions, cross-check tooling, and an environment preview summary.
+This project provides an interactive checklist to document Mr. Handyman best practices for franchise call flows. It captures routing, time frames, and configuration choices with local storage persistence, AI suggestions, cross-check tooling, and an environment preview summary.
 
 ## Getting started
 

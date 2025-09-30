@@ -371,6 +371,23 @@ button.secondary:focus-visible {
   font-size: 0.95rem;
 }
 
+.note-line {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 0.75rem;
+  font-size: 0.9rem;
+  color: var(--text-muted);
+}
+
+.fill-line {
+  flex: 1;
+  display: block;
+  min-width: 6rem;
+  border-bottom: 1px dashed var(--border);
+  height: 0.85em;
+}
+
 .options {
   border: 1px solid var(--border);
   border-radius: 12px;
@@ -398,6 +415,25 @@ button.secondary:focus-visible {
   margin-bottom: 0.5rem;
   font-weight: 500;
   cursor: pointer;
+}
+
+.option__label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.option__note {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.85rem;
+  font-weight: 400;
+  color: var(--text-muted);
+}
+
+.option__note .fill-line {
+  min-width: 5rem;
 }
 
 .option:last-child {

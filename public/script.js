@@ -2,10 +2,10 @@ const STORAGE_KEY = 'mr-handyman-checklist-v1';
 
 const checklistData = [
   {
-    id: 'blue-star',
-    title: 'Blue Star Requirements',
+    id: 'best-practices',
+    title: 'Mr. Handyman Best Practices',
     intro:
-      'Confirm the franchise-specific call flow foundations. Mr. Handyman does not participate in the Own The Number (OTN) program, so leverage live-answer processes instead.',
+      'Confirm the franchise-specific call flow foundations. Mr. Handyman does not participate in the Own The Number (OTN) program, so rely on live-answer processes instead.',
     tasks: [
       {
         id: 'live-answer',
@@ -18,12 +18,6 @@ const checklistData = [
         label: 'Confirm technician back-door routing works',
         description:
           'Place a test call using the technician back-door number. Confirm it bypasses the main greeting and rings the internal support line immediately.',
-      },
-      {
-        id: 'otn-note',
-        label: 'Document that OTN program is not applicable',
-        description:
-          'Record notes for the customer operations team that Mr. Handyman is excluded from OTN. Provide the reference link “OTN Brand Protection Specifics Per Brand | Mr. Handyman”.',
       },
     ],
     suggestions: (state) => {
@@ -43,13 +37,10 @@ const checklistData = [
       if (!state.byId('backdoor-number')) {
         fails.push('Technician back-door routing still needs validation.');
       }
-      if (!state.byId('otn-note')) {
-        fails.push('OTN exclusion note is missing.');
-      }
       if (!fails.length) {
         return {
           tone: 'success',
-          message: 'All foundational Blue Star requirements are confirmed.',
+          message: 'All foundational Mr. Handyman best practices are confirmed.',
         };
       }
       return {
@@ -67,8 +58,8 @@ const checklistData = [
       {
         id: 'daytime-frame',
         label: 'Create and test the Daytime Time Frame',
-        description:
-          'Confirm the days/hours the office is open and configure the matching Daytime Time Frame. Test by placing a call during an in-window time.',
+        descriptionHtml:
+          'Confirm the days/hours the office is open and configure the matching Daytime Time Frame. Test by placing a call during an in-window time.<div class="note-line"><strong>Confirmed hours:</strong> <span class="fill-line" aria-hidden="true"></span></div>',
       },
       {
         id: 'holiday-frame',
@@ -94,6 +85,7 @@ const checklistData = [
           {
             value: 'voicemail',
             label: 'Send to voicemail on Clarity phone',
+            note: 'Voicemail box:',
           },
           {
             value: 'cell-then-voicemail',
@@ -102,6 +94,7 @@ const checklistData = [
           {
             value: 'answering-service',
             label: 'Forward to answering service',
+            note: 'Forward to number:',
           },
         ],
       },
@@ -488,8 +481,12 @@ function renderChecklist() {
       });
 
       taskFragment.querySelector('.task__text').textContent = task.label;
-      taskFragment.querySelector('.task__description').textContent =
-        task.description || 'Add notes as needed.';
+      const descriptionEl = taskFragment.querySelector('.task__description');
+      if (task.descriptionHtml) {
+        descriptionEl.innerHTML = task.descriptionHtml;
+      } else {
+        descriptionEl.textContent = task.description || 'Add notes as needed.';
+      }
 
       contentEl.appendChild(taskFragment);
     });
@@ -529,6 +526,18 @@ function renderChecklist() {
         }
 
         optionLabel.textContent = choice.label;
+        if (choice.note) {
+          const note = document.createElement('span');
+          note.className = 'option__note';
+          const labelSpan = document.createElement('span');
+          labelSpan.textContent = choice.note;
+          const lineSpan = document.createElement('span');
+          lineSpan.className = 'fill-line';
+          lineSpan.setAttribute('aria-hidden', 'true');
+          note.appendChild(labelSpan);
+          note.appendChild(lineSpan);
+          optionLabel.appendChild(note);
+        }
 
         input.addEventListener('change', () => {
           if (group.type === 'radio') {
