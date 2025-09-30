@@ -211,119 +211,6 @@ const checklistData = [
         ],
       },
     ],
-    closingChecklist: [
-      {
-        id: 'installation-confirmation',
-        label: 'Installation Confirmation',
-      },
-      {
-        id: 'test-calls',
-        label: 'Inbound/Outbound Test Calls Completed and Outbound CID Confirmed with Customer',
-      },
-      {
-        id: 'texting-enabled',
-        label: 'Texting Enabled and tested inbound and outbound SMS and MMS',
-      },
-      {
-        id: 'devices-online',
-        label: 'Confirm All Devices are Online at Time of Install',
-      },
-      {
-        id: 'coa-tools',
-        label: 'Confirm COA mobile and COA webphone has been Installed and tested',
-      },
-      {
-        id: 'routing-tests',
-        label: 'Test Calls placed to confirm call routing accuracy',
-      },
-      {
-        id: 'hours-routing',
-        label: 'Confirm Business Hours and Afterhours Routing is in Place',
-      },
-      {
-        id: 'porting-poc',
-        label:
-          'Contacted the Point of Contact (POC) on the day of porting to confirm if they need anything else and to inform them of handoff email',
-      },
-      {
-        id: 'required-routing',
-        label: 'Required Routing Required for this franchise?',
-      },
-      {
-        id: 'best-practice-followed',
-        label: 'If Yes, Was Best Practice Guide Followed?',
-      },
-      {
-        id: 'portal-training',
-        label: 'Portal Training Completed and with who?',
-      },
-      {
-        id: 'portal-home-review',
-        label: 'Review Portal Home and Active call List',
-      },
-      {
-        id: 'timeframe-review',
-        label: 'Review Timeframes and how to adjust',
-      },
-      {
-        id: 'call-history-review',
-        label: 'Review Call History, Call Recordings and Cradle to Grave',
-      },
-      {
-        id: 'messaging-voicemail-review',
-        label: 'Review Portal Messaging and Voicemail',
-      },
-      {
-        id: 'miscellaneous',
-        label: 'Miscellaneous',
-      },
-      {
-        id: 'rabbit-run',
-        label: "Rabbit Run Cellular Enabled and Tested at Customer's Location",
-      },
-      {
-        id: 'failover-tested',
-        label: "Failover Enabled and Tested at Customer's Location",
-      },
-      {
-        id: 'vertex-configured',
-        label: 'Vertex Configured/Tested with POS',
-      },
-      {
-        id: 'api-configured',
-        label: 'API enabled/configured',
-      },
-      {
-        id: 'fax-tested',
-        label: 'Fax configured and tested inbound/outbound',
-      },
-      {
-        id: 'summary',
-        label: 'Summary - All features enabled from quote',
-      },
-      {
-        id: 'network-overview',
-        label:
-          'Network: (ISP--->Modem---->RabbitRun/Router/Switch/Firewall--->Phones) (Also Add this to the Network Notes section of CBS)',
-      },
-      {
-        id: 'network-example',
-        label:
-          'Example: Spectrum--->Motorola SB6121--->RRT200-->Stemeo POE104--->Poly VVX350',
-      },
-      {
-        id: 'dhcp-static',
-        label: 'DHCP/Static, if static list details',
-      },
-      {
-        id: 'pos-details',
-        label: 'POS Details',
-      },
-      {
-        id: 'pos-provider',
-        label: 'POS Provider, Ports Opened, POS Firewall Settings',
-      },
-    ],
     suggestions: (state) => {
       if (!state.byId('user-failover')) {
         return 'Add a failover destination in case the office loses connectivity or power.';
@@ -441,7 +328,7 @@ function decodeSharedState(value) {
 }
 
 function createShareablePayload(state) {
-  const payload = { tasks: {}, options: {}, closing: {} };
+  const payload = { tasks: {}, options: {} };
   if (!state) {
     return payload;
   }
@@ -469,26 +356,6 @@ function createShareablePayload(state) {
     delete payload.options;
   }
 
-  if (state.closing && typeof state.closing === 'object') {
-    Object.entries(state.closing).forEach(([id, value]) => {
-      if (!value || typeof value !== 'object') return;
-      const entry = {};
-      if (value.response) {
-        entry.response = String(value.response);
-      }
-      if (value.note) {
-        entry.note = String(value.note);
-      }
-      if (entry.response || entry.note) {
-        payload.closing[id] = entry;
-      }
-    });
-  }
-
-  if (!Object.keys(payload.closing).length) {
-    delete payload.closing;
-  }
-
   return payload;
 }
 
@@ -499,7 +366,9 @@ function applySharedStatePayload(targetState, payload) {
 
   targetState.tasks = {};
   targetState.options = {};
-  targetState.closing = {};
+  if ('closing' in targetState) {
+    delete targetState.closing;
+  }
 
   if (payload.tasks && typeof payload.tasks === 'object') {
     Object.entries(payload.tasks).forEach(([id, completed]) => {
@@ -521,21 +390,6 @@ function applySharedStatePayload(targetState, payload) {
     });
   }
 
-  if (payload.closing && typeof payload.closing === 'object') {
-    Object.entries(payload.closing).forEach(([id, value]) => {
-      if (!value || typeof value !== 'object') return;
-      const entry = {};
-      if (value.response) {
-        entry.response = String(value.response);
-      }
-      if (value.note) {
-        entry.note = String(value.note);
-      }
-      if (entry.response || entry.note) {
-        targetState.closing[id] = entry;
-      }
-    });
-  }
 }
 
 function loadSharedStateFromUrl() {
@@ -592,11 +446,10 @@ const storage = {
       return {
         tasks: parsed.tasks || {},
         options: parsed.options || {},
-        closing: parsed.closing || {},
       };
     } catch (error) {
       console.warn('Unable to read saved state:', error);
-      return { tasks: {}, options: {}, closing: {} };
+      return { tasks: {}, options: {} };
     }
   },
   save(state) {
@@ -618,7 +471,6 @@ const storage = {
 const savedState = storage.load();
 if (!savedState.tasks) savedState.tasks = {};
 if (!savedState.options) savedState.options = {};
-if (!savedState.closing) savedState.closing = {};
 
 let shareStatusElement = null;
 let pendingShareImportMessage = '';
@@ -686,22 +538,6 @@ const demoSamplePayload = {
     'queue-failover': 'answering-service',
     'user-unanswered-option': 'queue-301',
   },
-  closing: {
-    'installation-confirmation': { response: 'yes' },
-    'test-calls': { response: 'yes' },
-    'devices-online': { response: 'yes' },
-    'porting-poc': {
-      response: 'yes',
-      note: 'Confirmed needs met and sent handoff email',
-    },
-    'portal-training': { response: 'yes', note: 'Owner and office manager' },
-    summary: { response: 'yes' },
-    'network-overview': {
-      response: 'yes',
-      note: 'Spectrum → Motorola SB6121 → RRT200 → Stemeo POE104 → Poly VVX350',
-    },
-    'failover-tested': { response: 'no', note: 'Awaiting failover hardware delivery' },
-  },
 };
 
 const demoSteps = [
@@ -718,13 +554,6 @@ const demoSteps = [
     title: 'Review AI suggestions and cross-checks',
     description:
       'Each section provides AI suggestions and cross-check callouts. Use them to confirm holiday routing and other time frame details before go-live.',
-  },
-  {
-    id: 'closing',
-    target: '.section[data-section-id="user-300"] .closing-checklist',
-    title: 'Capture installation sign-off',
-    description:
-      'The closing checklist stores franchise sign-off responses and notes so you can document why any remaining items are pending.',
   },
   {
     id: 'share',
@@ -841,13 +670,12 @@ function cloneDemoState(state) {
         state || {
           tasks: {},
           options: {},
-          closing: {},
         }
       )
     );
   } catch (error) {
     console.warn('Unable to clone checklist state for demo backup.', error);
-    return { tasks: {}, options: {}, closing: {} };
+    return { tasks: {}, options: {} };
   }
 }
 
@@ -859,7 +687,7 @@ function applyDemoPayload(payload) {
 }
 
 function restoreStateFromBackup(backup) {
-  const source = backup || { tasks: {}, options: {}, closing: {} };
+  const source = backup || { tasks: {}, options: {} };
 
   savedState.tasks = {};
   if (source.tasks && typeof source.tasks === 'object') {
@@ -880,18 +708,8 @@ function restoreStateFromBackup(backup) {
       }
     });
   }
-
-  savedState.closing = {};
-  if (source.closing && typeof source.closing === 'object') {
-    Object.entries(source.closing).forEach(([id, value]) => {
-      if (!value || typeof value !== 'object') return;
-      const entry = {};
-      if (value.response) entry.response = value.response;
-      if (value.note) entry.note = value.note;
-      if (entry.response || entry.note) {
-        savedState.closing[id] = entry;
-      }
-    });
+  if ('closing' in savedState) {
+    delete savedState.closing;
   }
 
   storage.save(savedState);
@@ -1042,7 +860,7 @@ function startDemoPresentation() {
 
   if (shareStatusElement) {
     setShareStatus(
-      'Presentation demo loaded example data. Advance through the walkthrough or end the demo to restore your saved work.',
+      'Mr.Handyman Best Practies Checklist loaded example data. Advance through the walkthrough or end the demo to restore your saved work.',
       'info'
     );
   }
@@ -1063,7 +881,7 @@ function endDemoPresentation() {
   demoStateBackup = null;
 
   if (shareStatusElement) {
-    setShareStatus('Presentation demo closed. Your saved progress has been restored.', 'success');
+    setShareStatus('Mr.Handyman Best Practies Checklist closed. Your saved progress has been restored.', 'success');
   }
 
   const focusTarget = demoReturnFocus && typeof demoReturnFocus.focus === 'function' ? demoReturnFocus : null;
@@ -1103,19 +921,8 @@ function createStateHelpers(section) {
     completed: Boolean(savedState.tasks[task.id]),
   }));
 
-  const closingStatus = (section.closingChecklist || []).map((item) => {
-    const entry = (savedState.closing && savedState.closing[item.id]) || {};
-    return {
-      ...item,
-      response: entry.response || '',
-      note: entry.note || '',
-    };
-  });
-
   return {
     tasks: taskStatus,
-    closing: closingStatus,
-    hasClosingResponses: closingStatus.some((item) => item.response || item.note),
     byId(id) {
       return Boolean(savedState.tasks[id]);
     },
@@ -1251,101 +1058,6 @@ function renderChecklist() {
       contentEl.appendChild(optionFragment);
     });
 
-    if (section.closingChecklist && section.closingChecklist.length) {
-      const closingWrapper = document.createElement('div');
-      closingWrapper.className = 'closing-checklist';
-
-      const closingHeading = document.createElement('h3');
-      closingHeading.className = 'closing-checklist__title';
-      closingHeading.textContent = 'Closing Checklist';
-      closingWrapper.appendChild(closingHeading);
-
-      section.closingChecklist.forEach((item) => {
-        const itemEl = document.createElement('div');
-        itemEl.className = 'closing-checklist__item';
-
-        const label = document.createElement('h4');
-        label.className = 'closing-checklist__label';
-        label.textContent = item.label;
-        itemEl.appendChild(label);
-
-        const controls = document.createElement('div');
-        controls.className = 'closing-checklist__controls';
-
-        const responseGroup = document.createElement('label');
-        responseGroup.className = 'closing-checklist__response';
-        responseGroup.textContent = 'Response';
-
-        const select = document.createElement('select');
-        select.className = 'closing-response';
-        select.dataset.closingId = item.id;
-        ['','yes','na','no'].forEach((value) => {
-          const option = document.createElement('option');
-          option.value = value;
-          if (!value) {
-            option.textContent = 'Select';
-          } else if (value === 'yes') {
-            option.textContent = 'Yes';
-          } else if (value === 'na') {
-            option.textContent = 'N/A';
-          } else {
-            option.textContent = 'No';
-          }
-          select.appendChild(option);
-        });
-
-        const savedEntry = (savedState.closing && savedState.closing[item.id]) || {};
-        if (savedEntry.response) {
-          select.value = savedEntry.response;
-        }
-
-        select.addEventListener('change', () => {
-          const entry = savedState.closing[item.id] || {};
-          entry.response = select.value;
-          if (!entry.response && !entry.note) {
-            delete savedState.closing[item.id];
-          } else {
-            savedState.closing[item.id] = entry;
-          }
-          storage.save(savedState);
-          updateProgress();
-        });
-
-        responseGroup.appendChild(select);
-        controls.appendChild(responseGroup);
-
-        const noteGroup = document.createElement('label');
-        noteGroup.className = 'closing-checklist__notes';
-        noteGroup.textContent = 'Notes / Why?';
-
-        const noteField = document.createElement('textarea');
-        noteField.className = 'closing-note';
-        noteField.dataset.closingId = item.id;
-        noteField.rows = 2;
-        noteField.placeholder = 'Explain why (required if “No”).';
-        noteField.value = savedEntry.note || '';
-        noteField.addEventListener('input', () => {
-          const entry = savedState.closing[item.id] || {};
-          entry.note = noteField.value.trim();
-          if (!entry.response && !entry.note) {
-            delete savedState.closing[item.id];
-          } else {
-            savedState.closing[item.id] = entry;
-          }
-          storage.save(savedState);
-          updateProgress();
-        });
-
-        noteGroup.appendChild(noteField);
-        controls.appendChild(noteGroup);
-
-        itemEl.appendChild(controls);
-        closingWrapper.appendChild(itemEl);
-      });
-
-      contentEl.appendChild(closingWrapper);
-    }
-
     container.appendChild(sectionFragment);
   });
 
@@ -1431,19 +1143,13 @@ function bindControls() {
       storage.clear();
       Object.keys(savedState.tasks).forEach((key) => delete savedState.tasks[key]);
       Object.keys(savedState.options).forEach((key) => delete savedState.options[key]);
-      Object.keys(savedState.closing).forEach((key) => delete savedState.closing[key]);
+      if ('closing' in savedState) delete savedState.closing;
       document.querySelectorAll('input[type="checkbox"]').forEach((input) => {
         input.checked = false;
       });
       document
         .querySelectorAll('input[type="radio"]:checked')
         .forEach((input) => (input.checked = false));
-      document.querySelectorAll('.closing-response').forEach((select) => {
-        select.value = '';
-      });
-      document.querySelectorAll('.closing-note').forEach((textarea) => {
-        textarea.value = '';
-      });
       updateProgress();
       document
         .querySelectorAll('.section__insights')
@@ -1570,36 +1276,6 @@ function computeSectionPreview(section) {
         text: labels.length ? labels.join(', ') : 'No selections',
       });
     }
-  });
-
-  (section.closingChecklist || []).forEach((item) => {
-    const entry = (savedState.closing && savedState.closing[item.id]) || {};
-    const response = entry.response || '';
-    const note = entry.note || '';
-    const labelMap = {
-      yes: 'Yes',
-      na: 'N/A',
-      no: 'No',
-    };
-    const responseLabel = labelMap[response] || '';
-
-    let state = responseLabel ? 'complete' : 'pending';
-    let text = responseLabel || 'No response';
-
-    if (responseLabel) {
-      if (response === 'no' && !note) {
-        state = 'pending';
-        text = 'No – add reason';
-      } else if (note) {
-        text = `${responseLabel} – ${note}`;
-      }
-    }
-
-    items.push({
-      label: item.label,
-      state,
-      text,
-    });
   });
 
   const crossCheck = section.crossCheck ? section.crossCheck(helpers) : null;

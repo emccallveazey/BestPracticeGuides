@@ -25,14 +25,10 @@ Then browse to [http://localhost:8000](http://localhost:8000) to use the checkli
 
 Select **Environment Preview** inside the app to review a read-only summary of the captured configuration. The preview aggregates task completion across sections and highlights items that still need attention, making it easy to share the current environment posture with stakeholders.
 
-## Closing checklist responses
-
-The **User 300 Routing** section now includes a structured closing checklist so you can record installation sign-off answers (Yes / N/A / No) along with notes about why items are still pending. These responses are saved locally, reflected in the live preview, and included when you generate a shareable link.
-
 ## Share a saved checklist
 
 When you’re ready to hand progress to another teammate, choose **Share Progress Link**. The app will generate a unique URL that captures the current checklist selections. Copy or share the link so others can load the same state instantly—once opened, the shared progress is stored locally on their device so they can continue working.
 
-## AI guidance and presentation demo
+## AI guidance and walkthrough
 
-Each section’s **AI Suggestions** link opens ChatGPT in a new tab so you can ask follow-up questions or craft implementation notes. The new **Presentation Demo** button loads a guided walkthrough with sample data so you can highlight progress tracking, cross-checks, sharing, and previews during live presentations. End the demo at any time to return to your saved progress.
+Each section’s **AI Suggestions** link opens ChatGPT in a new tab so you can ask follow-up questions or craft implementation notes. The **Mr.Handyman Best Practies Checklist** button loads a guided walkthrough with sample data so you can highlight progress tracking, cross-checks, sharing, and previews during live presentations. End the demo at any time to return to your saved progress.
