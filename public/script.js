@@ -391,6 +391,9 @@ let lastFocusedElement = null;
 let previewFocusableElements = [];
 let previewFirstFocusable = null;
 let previewLastFocusable = null;
+let livePreviewContainer = null;
+let livePreviewBody = null;
+let latestPreviewSnapshot = null;
 
 function setInsightMessage(target, title, message) {
   if (!target) return;
@@ -591,39 +594,21 @@ function updateProgress() {
   const progressText = document.querySelector('.progress__summary');
   const progressBar = document.querySelector('.progress-bar');
   const progressBarFill = document.querySelector('.progress-bar__fill');
-  const totalTasks = checklistData.reduce((total, section) => {
-    const optionCount = (section.options || []).reduce((count, group) => {
-      return count + (group.type === 'radio' ? 1 : group.choices.length);
-    }, 0);
-    return total + (section.tasks ? section.tasks.length : 0) + optionCount;
-  }, 0);
+  const snapshot = getPreviewSnapshot();
+  latestPreviewSnapshot = snapshot;
 
-  const completedTasks = checklistData.reduce((total, section) => {
-    const taskCount = (section.tasks || []).filter((task) => savedState.tasks[task.id])
-      .length;
-    const optionCount = (section.options || []).reduce((count, group) => {
-      const value = savedState.options[group.id];
-      if (group.type === 'radio') {
-        return count + (value ? 1 : 0);
-      }
-      if (group.type === 'checkbox') {
-        return count + (Array.isArray(value) ? value.length : 0);
-      }
-      return count;
-    }, 0);
-    return total + taskCount + optionCount;
-  }, 0);
-
-  const percent = totalTasks ? Math.round((completedTasks / totalTasks) * 100) : 0;
   if (progressBarFill) {
-    progressBarFill.style.width = `${percent}%`;
+    progressBarFill.style.width = `${snapshot.percent}%`;
   }
   if (progressBar) {
-    progressBar.setAttribute('aria-valuenow', percent);
+    progressBar.setAttribute('aria-valuenow', snapshot.percent);
   }
-  progressText.textContent = `${completedTasks} of ${totalTasks} checklist items captured (${percent}%).`;
+  if (progressText) {
+    progressText.textContent = `${snapshot.completed} of ${snapshot.total} checklist items captured (${snapshot.percent}%).`;
+  }
 
-  refreshPreviewIfOpen();
+  renderLivePreview(snapshot);
+  refreshPreviewIfOpen(snapshot);
 }
 
 function bindControls() {
@@ -662,6 +647,10 @@ function bindControls() {
 function init() {
   renderChecklist();
   bindControls();
+  livePreviewContainer = document.getElementById('live-preview');
+  livePreviewBody = livePreviewContainer
+    ? livePreviewContainer.querySelector('.live-preview__body')
+    : null;
   previewOverlay = document.getElementById('preview-overlay');
   previewDialog = previewOverlay ? previewOverlay.querySelector('.preview__dialog') : null;
   previewBody = previewDialog ? previewDialog.querySelector('.preview__body') : null;
@@ -720,15 +709,8 @@ function computeSectionPreview(section) {
   };
 }
 
-function gatherPreviewData() {
-  return checklistData.map((section) => computeSectionPreview(section));
-}
-
-function renderPreviewContent() {
-  if (!previewBody) return;
-
-  const sections = gatherPreviewData();
-  const fragment = document.createDocumentFragment();
+function getPreviewSnapshot() {
+  const sections = checklistData.map((section) => computeSectionPreview(section));
   const totals = sections.reduce(
     (acc, section) => {
       acc.completed += section.completed;
@@ -738,14 +720,102 @@ function renderPreviewContent() {
     { completed: 0, total: 0 }
   );
 
+  const percent = totals.total ? Math.round((totals.completed / totals.total) * 100) : 0;
+
+  return {
+    sections,
+    completed: totals.completed,
+    total: totals.total,
+    percent,
+  };
+}
+
+function renderLivePreview(snapshot = latestPreviewSnapshot || getPreviewSnapshot()) {
+  if (!livePreviewBody) return;
+
+  const data = snapshot || getPreviewSnapshot();
+  const fragment = document.createDocumentFragment();
+
+  const summary = document.createElement('div');
+  summary.className = 'live-preview__summary';
+
+  const summaryHeading = document.createElement('strong');
+  summaryHeading.textContent = 'Snapshot overview';
+  summary.appendChild(summaryHeading);
+
+  const summaryDetail = document.createElement('span');
+  summaryDetail.textContent = data.total
+    ? `${data.completed} of ${data.total} environment items captured (${data.percent}%).`
+    : 'No environment items have been captured yet.';
+  summary.appendChild(summaryDetail);
+
+  fragment.appendChild(summary);
+
+  data.sections.forEach((section) => {
+    const sectionEl = document.createElement('section');
+    sectionEl.className = 'live-preview__section';
+
+    const headerEl = document.createElement('div');
+    headerEl.className = 'live-preview__section-header';
+
+    const titleEl = document.createElement('h3');
+    titleEl.className = 'live-preview__section-title';
+    titleEl.textContent = section.title;
+    headerEl.appendChild(titleEl);
+
+    const progressEl = document.createElement('span');
+    progressEl.className = 'live-preview__section-progress';
+    progressEl.textContent = section.total ? `${section.completed}/${section.total}` : 'No items';
+    headerEl.appendChild(progressEl);
+
+    sectionEl.appendChild(headerEl);
+
+    if (section.items.length) {
+      const itemsList = document.createElement('ul');
+      itemsList.className = 'live-preview__items';
+
+      section.items.forEach((item) => {
+        const itemRow = document.createElement('li');
+        itemRow.className = 'live-preview__item';
+
+        const label = document.createElement('span');
+        label.className = 'live-preview__item-label';
+        label.textContent = item.label;
+        itemRow.appendChild(label);
+
+        const status = document.createElement('span');
+        status.className = 'live-preview__item-status';
+        status.dataset.state = item.state;
+        status.textContent = item.text;
+        itemRow.appendChild(status);
+
+        itemsList.appendChild(itemRow);
+      });
+
+      sectionEl.appendChild(itemsList);
+    }
+
+    fragment.appendChild(sectionEl);
+  });
+
+  livePreviewBody.innerHTML = '';
+  livePreviewBody.appendChild(fragment);
+}
+
+function renderPreviewContent(snapshot = latestPreviewSnapshot || getPreviewSnapshot()) {
+  if (!previewBody) return;
+
+  const data = snapshot || getPreviewSnapshot();
+  const fragment = document.createDocumentFragment();
+
   const summary = document.createElement('div');
   summary.className = 'preview__summary';
-  summary.textContent = totals.total
-    ? `${totals.completed} of ${totals.total} environment items are configured.`
+  summary.textContent = data.total
+    ? `${data.completed} of ${data.total} environment items are configured.`
     : 'No configuration items defined.';
   fragment.appendChild(summary);
 
-  sections.forEach((section) => {
+  data.sections.forEach((section) => {
     const sectionEl = document.createElement('section');
     sectionEl.className = 'preview__section';
 
@@ -799,9 +869,9 @@ function renderPreviewContent() {
   preparePreviewFocusTrap();
 }
 
-function refreshPreviewIfOpen() {
+function refreshPreviewIfOpen(snapshot = latestPreviewSnapshot || getPreviewSnapshot()) {
   if (previewOverlay && previewOverlay.getAttribute('aria-hidden') === 'false') {
-    renderPreviewContent();
+    renderPreviewContent(snapshot);
   }
 }
 
@@ -813,7 +883,7 @@ function openPreview() {
     previewHideTimer = null;
   }
 
-  renderPreviewContent();
+  renderPreviewContent(latestPreviewSnapshot || getPreviewSnapshot());
   previewOverlay.hidden = false;
   requestAnimationFrame(() => {
     previewOverlay.setAttribute('aria-hidden', 'false');

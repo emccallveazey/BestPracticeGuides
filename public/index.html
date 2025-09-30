@@ -7,35 +7,53 @@
     <link rel="stylesheet" href="styles.css" />
   </head>
   <body>
-    <main>
-      <header>
-        <h1>Mr. Handyman Franchise Verification Checklist</h1>
-        <p>
-          Use this interactive tool to confirm the Blue Star requirements for
-          Mr. Handyman. Progress is saved locally so you can revisit and
-          continue verifying configurations as needed.
-        </p>
-      </header>
+    <div class="app-shell">
+      <main>
+        <header>
+          <h1>Mr. Handyman Franchise Verification Checklist</h1>
+          <p>
+            Use this interactive tool to confirm the Blue Star requirements for
+            Mr. Handyman. Progress is saved locally so you can revisit and
+            continue verifying configurations as needed.
+          </p>
+        </header>
 
-      <section class="progress" aria-live="polite">
-        <h2>Overall Progress</h2>
-        <div class="progress-bar" role="progressbar" aria-valuemin="0" aria-valuemax="100">
-          <div class="progress-bar__fill"></div>
+        <section class="progress" aria-live="polite">
+          <h2>Overall Progress</h2>
+          <div class="progress-bar" role="progressbar" aria-valuemin="0" aria-valuemax="100">
+            <div class="progress-bar__fill"></div>
+          </div>
+          <p class="progress__summary"></p>
+        </section>
+
+        <section class="controls">
+          <button id="btn-clear" type="button" class="secondary">
+            Clear Saved Progress
+          </button>
+          <button id="btn-preview" type="button">
+            Environment Preview
+          </button>
+        </section>
+
+        <div id="checklist" class="checklist" aria-live="polite"></div>
+      </main>
+
+      <aside
+        id="live-preview"
+        class="live-preview"
+        aria-labelledby="live-preview-title"
+      >
+        <div class="live-preview__header">
+          <h2 id="live-preview-title">Live Environment Preview</h2>
+          <p>
+            Review your configuration snapshot as you work. The panel updates in
+            real time and mirrors the Environment Preview dialog for quick
+            cross-checking.
+          </p>
         </div>
-        <p class="progress__summary"></p>
-      </section>
-
-      <section class="controls">
-        <button id="btn-clear" type="button" class="secondary">
-          Clear Saved Progress
-        </button>
-        <button id="btn-preview" type="button">
-          Environment Preview
-        </button>
-      </section>
-
-      <div id="checklist" class="checklist" aria-live="polite"></div>
-    </main>
+        <div class="live-preview__body" aria-live="polite"></div>
+      </aside>
+    </div>
 
     <div
       id="preview-overlay"
