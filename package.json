@@ -1,0 +1,13 @@
+{
+  "name": "mr-handyman-checklist",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Interactive Mr. Handyman best practices checklist",
+  "scripts": {
+    "start": "http-server docs -p 3000 -a 0.0.0.0",
+    "dev": "http-server docs -p 3000 -a 0.0.0.0 -c-1"
+  },
+  "dependencies": {
+    "http-server": "^14.1.1"
+  }
+}

@@ -11,6 +11,16 @@ This repository contains an interactive checklist that guides franchise teams th
 
 The `docs/` directory already includes the fully interactive experience—once Pages is enabled, stakeholders can visit the published URL and start using the checklist immediately.
 
+## Run on Replit
+
+You can deploy the checklist to a free [Replit](https://replit.com/) workspace for teams that prefer a hosted, always-on preview:
+
+1. Create a new Replit project and import this GitHub repository.
+2. Replit will detect the included `.replit`, `replit.nix`, and `package.json` files and automatically install Node.js plus the dependencies the first time it runs.
+3. When the install finishes, the repl launches `http-server` on port 3000 and exposes the interactive checklist at the public Replit URL.
+
+Any time you push new commits, use Replit’s **Pull latest** button to refresh the deployment.
+
 ## Preview locally
 
 You can also open the checklist directly from the filesystem or serve it through any static web server. For example, with Python installed:
