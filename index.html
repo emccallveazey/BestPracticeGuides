@@ -574,6 +574,104 @@ button.secondary:focus-visible {
   accent-color: var(--clarity-orange);
 }
 
+.closing-checklist {
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 1.5rem;
+  margin-bottom: 1.5rem;
+  background: var(--surface);
+  box-shadow: 0 18px 46px -30px rgba(226, 107, 10, 0.35);
+}
+
+.closing-checklist__title {
+  margin: 0 0 1.25rem;
+  font-size: 1.2rem;
+  color: var(--clarity-navy);
+}
+
+.closing-group + .closing-group {
+  border-top: 1px solid var(--border);
+  margin-top: 1.5rem;
+  padding-top: 1.5rem;
+}
+
+.closing-group__title {
+  margin: 0 0 0.75rem;
+  font-size: 1.05rem;
+  color: var(--clarity-navy);
+}
+
+.closing-group__items {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.closing-item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.closing-item__prompt {
+  margin: 0;
+  font-weight: 600;
+  color: var(--clarity-navy);
+}
+
+.closing-item__controls {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.closing-item__responses {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.closing-item__responses label {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-weight: 500;
+}
+
+.closing-item__responses input[type='radio'] {
+  accent-color: var(--clarity-orange);
+}
+
+.closing-item__note {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  font-size: 0.95rem;
+  color: var(--text-muted);
+}
+
+.closing-item__note textarea {
+  min-height: 2.5rem;
+  padding: 0.6rem 0.75rem;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  background: var(--surface-soft);
+  font-family: inherit;
+  font-size: 0.95rem;
+  resize: vertical;
+  color: var(--text);
+}
+
+.closing-item__note textarea:focus {
+  outline: 2px solid rgba(226, 107, 10, 0.35);
+  outline-offset: 2px;
+}
+
+.closing-item__note[data-required='true'] textarea {
+  border-color: rgba(194, 69, 45, 0.65);
+  box-shadow: 0 0 0 1px rgba(194, 69, 45, 0.2);
+}
+
 .section__insights {
   margin-top: 1rem;
   padding: 0.85rem 1rem;
@@ -1356,6 +1454,10 @@ const checklistData = [
       if (!state.optionSelected('user-unanswered-option')) {
         return 'Align on the preferred unanswered treatment and update the radio selection to track the decision.';
       }
+      if (state.closingPendingCount && state.closingPendingCount()) {
+        const remaining = state.closingPendingCount();
+        return `Capture the remaining closing checklist responses (${remaining} outstanding) before handing off to the customer.`;
+      }
       return 'Double-check the Daytime hunt order to confirm priority extensions ring first where needed.';
     },
     crossCheck: (state) => {
@@ -1368,6 +1470,13 @@ const checklistData = [
       if (!state.byId('after-hours-rule')) pending.push('After-hours answering rule not configured.');
       if (!state.byId('holiday-rule')) pending.push('Holiday routing not linked.');
       if (!state.byId('voicemail-disabled')) pending.push('User 300 voicemail is still enabled.');
+      if (state.closingPendingCount && state.closingPendingCount()) {
+        pending.push(
+          `Closing checklist missing ${state.closingPendingCount()} response${
+            state.closingPendingCount() === 1 ? '' : 's'
+          }.`
+        );
+      }
       if (!pending.length) {
         return {
           tone: 'success',
@@ -1379,6 +1488,201 @@ const checklistData = [
         message: pending.join(' '),
       };
     },
+    closingTitle: 'Closing Checklist',
+    closingChecklist: [
+      {
+        id: 'installation-confirmation',
+        title: 'Installation Confirmation',
+        items: [
+          {
+            id: 'closing-test-calls',
+            type: 'response',
+            prompt:
+              'Inbound/Outbound Test Calls completed and outbound CID confirmed with customer?',
+            previewLabel: 'Closing – Test calls and CID',
+            noteLabel: 'If “No”, document why:',
+          },
+          {
+            id: 'closing-texting-enabled',
+            type: 'response',
+            prompt: 'Texting enabled and inbound/outbound SMS/MMS verified?',
+            previewLabel: 'Closing – Texting validation',
+            noteLabel: 'If “No”, document why:',
+          },
+          {
+            id: 'closing-devices-online',
+            type: 'response',
+            prompt: 'All devices confirmed online at time of install?',
+            previewLabel: 'Closing – Devices online',
+            noteLabel: 'If “No”, document why:',
+          },
+          {
+            id: 'closing-coa-tools',
+            type: 'response',
+            prompt: 'COA mobile and COA webphone installed and tested?',
+            previewLabel: 'Closing – COA tools verified',
+            noteLabel: 'If “No”, document why:',
+          },
+          {
+            id: 'closing-routing-tests',
+            type: 'response',
+            prompt: 'Test calls placed to confirm call routing accuracy?',
+            previewLabel: 'Closing – Routing accuracy tests',
+            noteLabel: 'If “No”, document why:',
+          },
+          {
+            id: 'closing-hours-configured',
+            type: 'response',
+            prompt: 'Business hours and after-hours routing configured?',
+            previewLabel: 'Closing – Hours and after-hours routing',
+            noteLabel: 'If “No”, document why:',
+          },
+          {
+            id: 'closing-poc-contacted',
+            type: 'response',
+            prompt:
+              'POC contacted on porting day to confirm needs and inform them of the handoff email?',
+            previewLabel: 'Closing – POC contact',
+            noteLabel: 'If “No”, document why:',
+          },
+          {
+            id: 'closing-required-routing',
+            type: 'response',
+            prompt: 'Required routing documented for this franchise?',
+            previewLabel: 'Closing – Required routing captured',
+            noteLabel: 'If “No”, document why:',
+          },
+          {
+            id: 'closing-routing-guide',
+            type: 'response',
+            prompt: 'If required routing, was the Best Practice Guide followed?',
+            previewLabel: 'Closing – Best Practice Guide followed',
+            noteLabel: 'If “No”, document why:',
+          },
+          {
+            id: 'closing-portal-training',
+            type: 'response',
+            prompt: 'Portal training completed and attendee documented?',
+            previewLabel: 'Closing – Portal training recorded',
+            noteLabel: 'If “No”, document why:',
+            placeholder: 'Note who attended training.',
+          },
+          {
+            id: 'closing-portal-home',
+            type: 'response',
+            prompt: 'Portal home and active call list reviewed?',
+            previewLabel: 'Closing – Portal home reviewed',
+            noteLabel: 'If “No”, document why:',
+          },
+          {
+            id: 'closing-timeframes-reviewed',
+            type: 'response',
+            prompt: 'Timeframes reviewed and adjustments demonstrated?',
+            previewLabel: 'Closing – Timeframe adjustments covered',
+            noteLabel: 'If “No”, document why:',
+          },
+          {
+            id: 'closing-call-history',
+            type: 'response',
+            prompt: 'Call history, call recordings, and cradle-to-grave reviewed?',
+            previewLabel: 'Closing – Call history walkthrough',
+            noteLabel: 'If “No”, document why:',
+          },
+          {
+            id: 'closing-messaging-voicemail',
+            type: 'response',
+            prompt: 'Portal messaging and voicemail reviewed?',
+            previewLabel: 'Closing – Messaging and voicemail reviewed',
+            noteLabel: 'If “No”, document why:',
+          },
+        ],
+      },
+      {
+        id: 'miscellaneous',
+        title: 'Miscellaneous',
+        items: [
+          {
+            id: 'closing-rabbit-run',
+            type: 'response',
+            prompt: "Rabbit Run Cellular enabled and tested at customer's location?",
+            previewLabel: 'Closing – Rabbit Run cellular',
+            noteLabel: 'If “No”, document why:',
+          },
+          {
+            id: 'closing-failover',
+            type: 'response',
+            prompt: "Failover enabled and tested at customer's location?",
+            previewLabel: 'Closing – Failover tested',
+            noteLabel: 'If “No”, document why:',
+          },
+          {
+            id: 'closing-vertex',
+            type: 'response',
+            prompt: 'Vertex configured/tested with POS?',
+            previewLabel: 'Closing – Vertex with POS',
+            noteLabel: 'If “No”, document why:',
+          },
+          {
+            id: 'closing-api',
+            type: 'response',
+            prompt: 'API enabled/configured?',
+            previewLabel: 'Closing – API configuration',
+            noteLabel: 'If “No”, document why:',
+          },
+          {
+            id: 'closing-fax',
+            type: 'response',
+            prompt: 'Fax configured and tested inbound/outbound?',
+            previewLabel: 'Closing – Fax tested',
+            noteLabel: 'If “No”, document why:',
+          },
+        ],
+      },
+      {
+        id: 'summary',
+        title: 'Summary & Network Notes',
+        items: [
+          {
+            id: 'closing-features-enabled',
+            type: 'response',
+            prompt: 'All features enabled from quote?',
+            previewLabel: 'Closing – Features enabled from quote',
+            noteLabel: 'If “No”, document why:',
+          },
+          {
+            id: 'closing-network-path',
+            type: 'text',
+            prompt:
+              'Network path documented (ISP → Modem → RabbitRun/Router/Switch/Firewall → Phones)?',
+            previewLabel: 'Closing – Network path documented',
+            placeholder:
+              'Example: Spectrum → Motorola SB6121 → RRT200 → Stemeo POE104 → Poly VVX350',
+            noteLabel: 'Network notes (add to CBS):',
+          },
+          {
+            id: 'closing-dhcp-static',
+            type: 'text',
+            prompt: 'DHCP/Static details (if static, list configuration details):',
+            previewLabel: 'Closing – DHCP/static details',
+            noteLabel: 'Configuration details:',
+          },
+          {
+            id: 'closing-pos-details',
+            type: 'text',
+            prompt: 'POS details captured?',
+            previewLabel: 'Closing – POS details',
+            noteLabel: 'Document POS setup:',
+          },
+          {
+            id: 'closing-pos-provider',
+            type: 'text',
+            prompt: 'POS provider, ports opened, and POS firewall settings recorded?',
+            previewLabel: 'Closing – POS provider & firewall settings',
+            noteLabel: 'Provider and firewall notes:',
+          },
+        ],
+      },
+    ],
   },
   {
     id: 'additional',
@@ -1466,7 +1770,7 @@ function decodeSharedState(value) {
 }
 
 function createShareablePayload(state) {
-  const payload = { tasks: {}, options: {} };
+  const payload = { tasks: {}, options: {}, closing: {} };
   if (!state) {
     return payload;
   }
@@ -1487,11 +1791,37 @@ function createShareablePayload(state) {
     }
   });
 
+  Object.entries(state.closing || {}).forEach(([id, entry]) => {
+    if (!entry) {
+      return;
+    }
+
+    let response = '';
+    let note = '';
+    if (typeof entry === 'object') {
+      response = entry.response ? String(entry.response) : '';
+      note = entry.note ? String(entry.note) : '';
+    } else if (typeof entry === 'string') {
+      note = entry;
+    }
+
+    const trimmedNote = note.trim();
+    if (response || trimmedNote) {
+      const closingEntry = {};
+      if (response) closingEntry.response = response;
+      if (trimmedNote) closingEntry.note = trimmedNote;
+      payload.closing[id] = closingEntry;
+    }
+  });
+
   if (!Object.keys(payload.tasks).length) {
     delete payload.tasks;
   }
   if (!Object.keys(payload.options).length) {
     delete payload.options;
+  }
+  if (!Object.keys(payload.closing).length) {
+    delete payload.closing;
   }
 
   return payload;
@@ -1504,9 +1834,7 @@ function applySharedStatePayload(targetState, payload) {
 
   targetState.tasks = {};
   targetState.options = {};
-  if ('closing' in targetState) {
-    delete targetState.closing;
-  }
+  targetState.closing = {};
 
   if (payload.tasks && typeof payload.tasks === 'object') {
     Object.entries(payload.tasks).forEach(([id, completed]) => {
@@ -1528,6 +1856,22 @@ function applySharedStatePayload(targetState, payload) {
     });
   }
 
+  if (payload.closing && typeof payload.closing === 'object') {
+    Object.entries(payload.closing).forEach(([id, entry]) => {
+      if (!entry || typeof entry !== 'object') {
+        return;
+      }
+
+      const response = entry.response ? String(entry.response) : '';
+      const note = entry.note ? String(entry.note) : '';
+      if (response || note.trim()) {
+        targetState.closing[id] = {
+          response,
+          note,
+        };
+      }
+    });
+  }
 }
 
 function loadSharedStateFromUrl() {
@@ -1609,6 +1953,7 @@ const storage = {
 const savedState = storage.load();
 if (!savedState.tasks) savedState.tasks = {};
 if (!savedState.options) savedState.options = {};
+if (!savedState.closing) savedState.closing = {};
 
 let shareStatusElement = null;
 let pendingShareImportMessage = '';
@@ -1675,6 +2020,34 @@ const demoSamplePayload = {
     'after-hours-destination': 'answering-service',
     'queue-failover': 'answering-service',
     'user-unanswered-option': 'queue-301',
+  },
+  closing: {
+    'closing-test-calls': { response: 'yes' },
+    'closing-texting-enabled': { response: 'yes' },
+    'closing-devices-online': { response: 'yes' },
+    'closing-coa-tools': { response: 'yes' },
+    'closing-routing-tests': { response: 'yes' },
+    'closing-hours-configured': { response: 'yes' },
+    'closing-poc-contacted': { response: 'yes' },
+    'closing-required-routing': { response: 'yes' },
+    'closing-routing-guide': { response: 'yes' },
+    'closing-portal-training': { response: 'yes', note: 'Owner and office manager' },
+    'closing-portal-home': { response: 'yes' },
+    'closing-timeframes-reviewed': { response: 'yes' },
+    'closing-call-history': { response: 'yes' },
+    'closing-messaging-voicemail': { response: 'yes' },
+    'closing-rabbit-run': { response: 'na' },
+    'closing-failover': { response: 'yes' },
+    'closing-vertex': { response: 'na' },
+    'closing-api': { response: 'na' },
+    'closing-fax': { response: 'yes' },
+    'closing-features-enabled': { response: 'yes' },
+    'closing-network-path': {
+      note: 'Spectrum → Motorola SB6121 → RRT200 → Stemeo POE104 → Poly VVX350',
+    },
+    'closing-dhcp-static': { note: 'DHCP; reserve static for RabbitRun if requested.' },
+    'closing-pos-details': { note: 'ServiceTitan integrated; confirm credentials stored.' },
+    'closing-pos-provider': { note: 'ServiceTitan – ports opened per guide; firewall allows outbound 443.' },
   },
 };
 
@@ -1808,12 +2181,13 @@ function cloneDemoState(state) {
         state || {
           tasks: {},
           options: {},
+          closing: {},
         }
       )
     );
   } catch (error) {
     console.warn('Unable to clone checklist state for demo backup.', error);
-    return { tasks: {}, options: {} };
+    return { tasks: {}, options: {}, closing: {} };
   }
 }
 
@@ -1825,7 +2199,7 @@ function applyDemoPayload(payload) {
 }
 
 function restoreStateFromBackup(backup) {
-  const source = backup || { tasks: {}, options: {} };
+  const source = backup || { tasks: {}, options: {}, closing: {} };
 
   savedState.tasks = {};
   if (source.tasks && typeof source.tasks === 'object') {
@@ -1846,8 +2220,19 @@ function restoreStateFromBackup(backup) {
       }
     });
   }
-  if ('closing' in savedState) {
-    delete savedState.closing;
+
+  savedState.closing = {};
+  if (source.closing && typeof source.closing === 'object') {
+    Object.entries(source.closing).forEach(([id, entry]) => {
+      if (!entry || typeof entry !== 'object') {
+        return;
+      }
+      const response = entry.response ? String(entry.response) : '';
+      const note = entry.note ? String(entry.note) : '';
+      if (response || note.trim()) {
+        savedState.closing[id] = { response, note };
+      }
+    });
   }
 
   storage.save(savedState);
@@ -2059,8 +2444,43 @@ function createStateHelpers(section) {
     completed: Boolean(savedState.tasks[task.id]),
   }));
 
+  const closingStatus = [];
+  (section.closingChecklist || []).forEach((group) => {
+    (group.items || []).forEach((item) => {
+      const entry = savedState.closing[item.id];
+      const response = entry && typeof entry === 'object' ? entry.response || '' : '';
+      const note = entry
+        ? typeof entry === 'object'
+          ? entry.note || ''
+          : typeof entry === 'string'
+          ? entry
+          : ''
+        : '';
+      let completed = false;
+      if (item.type === 'response') {
+        if (response === 'no') {
+          completed = Boolean(note && note.trim());
+        } else {
+          completed = Boolean(response);
+        }
+      } else if (item.type === 'text') {
+        completed = Boolean(note && note.trim());
+      }
+      closingStatus.push({
+        id: item.id,
+        label: item.previewLabel || item.prompt,
+        prompt: item.prompt,
+        response,
+        note,
+        completed,
+        type: item.type,
+      });
+    });
+  });
+
   return {
     tasks: taskStatus,
+    closing: closingStatus,
     byId(id) {
       return Boolean(savedState.tasks[id]);
     },
@@ -2070,6 +2490,20 @@ function createStateHelpers(section) {
         return selection.length > 0;
       }
       return Boolean(selection);
+    },
+    closingResponse(id) {
+      const match = closingStatus.find((item) => item.id === id);
+      return match ? match.response : '';
+    },
+    closingNote(id) {
+      const match = closingStatus.find((item) => item.id === id);
+      return match ? match.note : '';
+    },
+    closingCompletedCount() {
+      return closingStatus.filter((item) => item.completed).length;
+    },
+    closingPendingCount() {
+      return closingStatus.filter((item) => !item.completed).length;
     },
   };
 }
@@ -2196,6 +2630,169 @@ function renderChecklist() {
       contentEl.appendChild(optionFragment);
     });
 
+    if (section.closingChecklist && section.closingChecklist.length) {
+      const closingContainer = document.createElement('div');
+      closingContainer.className = 'closing-checklist';
+
+      const heading = document.createElement('h3');
+      heading.className = 'closing-checklist__title';
+      heading.textContent = section.closingTitle || 'Closing Checklist';
+      closingContainer.appendChild(heading);
+
+      section.closingChecklist.forEach((group) => {
+        const groupEl = document.createElement('div');
+        groupEl.className = 'closing-group';
+        groupEl.dataset.closingGroupId = group.id;
+
+        if (group.title) {
+          const groupTitle = document.createElement('h4');
+          groupTitle.className = 'closing-group__title';
+          groupTitle.textContent = group.title;
+          groupEl.appendChild(groupTitle);
+        }
+
+        if (group.description) {
+          const groupDescription = document.createElement('p');
+          groupDescription.className = 'section__intro';
+          groupDescription.textContent = group.description;
+          groupEl.appendChild(groupDescription);
+        }
+
+        const itemsContainer = document.createElement('div');
+        itemsContainer.className = 'closing-group__items';
+
+        (group.items || []).forEach((item) => {
+          const itemEl = document.createElement('div');
+          itemEl.className = 'closing-item';
+          itemEl.dataset.closingItemId = item.id;
+
+          const promptEl = document.createElement('p');
+          promptEl.className = 'closing-item__prompt';
+          promptEl.textContent = item.prompt;
+          itemEl.appendChild(promptEl);
+
+          const controlsEl = document.createElement('div');
+          controlsEl.className = 'closing-item__controls';
+
+          const entry = savedState.closing[item.id];
+          let currentResponse =
+            entry && typeof entry === 'object' && entry.response ? String(entry.response) : '';
+          let currentNote =
+            entry && typeof entry === 'object'
+              ? entry.note || ''
+              : typeof entry === 'string'
+              ? entry
+              : '';
+
+          const syncClosingEntry = () => {
+            const responseValue = currentResponse || '';
+            const noteValue = currentNote || '';
+            const payload = {};
+            if (responseValue) {
+              payload.response = responseValue;
+            }
+            if (noteValue.trim()) {
+              payload.note = noteValue;
+            }
+
+            if (Object.keys(payload).length) {
+              savedState.closing[item.id] = payload;
+            } else {
+              delete savedState.closing[item.id];
+            }
+            storage.save(savedState);
+          };
+
+          let noteWrapper = null;
+          let noteField = null;
+
+          const updateNoteRequirement = () => {
+            if (!noteWrapper || item.type !== 'response') {
+              return;
+            }
+            if (currentResponse === 'no' && !currentNote.trim()) {
+              noteWrapper.dataset.required = 'true';
+            } else {
+              noteWrapper.removeAttribute('data-required');
+            }
+          };
+
+          if (item.type === 'response') {
+            const responsesEl = document.createElement('div');
+            responsesEl.className = 'closing-item__responses';
+            const responses = item.responses || [
+              { value: 'yes', label: 'Yes' },
+              { value: 'na', label: 'N/A' },
+              { value: 'no', label: 'No' },
+            ];
+
+            responses.forEach((option) => {
+              const responseLabel = document.createElement('label');
+              const input = document.createElement('input');
+              input.type = 'radio';
+              input.name = item.id;
+              input.value = option.value;
+              input.dataset.closingResponse = item.id;
+              input.checked = currentResponse === option.value;
+
+              input.addEventListener('change', () => {
+                currentResponse = input.value;
+                syncClosingEntry();
+                updateNoteRequirement();
+                updateProgress();
+              });
+
+              const span = document.createElement('span');
+              span.textContent = option.label;
+
+              responseLabel.appendChild(input);
+              responseLabel.appendChild(span);
+              responsesEl.appendChild(responseLabel);
+            });
+
+            controlsEl.appendChild(responsesEl);
+          }
+
+          const noteLabel = item.noteLabel
+            ? item.noteLabel
+            : item.type === 'response'
+            ? 'If “No”, explain why:'
+            : 'Details';
+          noteWrapper = document.createElement('label');
+          noteWrapper.className = 'closing-item__note';
+
+          const noteText = document.createElement('span');
+          noteText.textContent = noteLabel;
+          noteWrapper.appendChild(noteText);
+
+          noteField = document.createElement('textarea');
+          noteField.value = currentNote;
+          noteField.placeholder = item.placeholder || '';
+          noteField.rows = item.rows || (item.type === 'text' ? 3 : 2);
+          noteField.dataset.closingNote = item.id;
+          noteWrapper.appendChild(noteField);
+
+          noteField.addEventListener('input', () => {
+            currentNote = noteField.value;
+            syncClosingEntry();
+            updateNoteRequirement();
+            updateProgress();
+          });
+
+          updateNoteRequirement();
+
+          controlsEl.appendChild(noteWrapper);
+          itemEl.appendChild(controlsEl);
+          itemsContainer.appendChild(itemEl);
+        });
+
+        groupEl.appendChild(itemsContainer);
+        closingContainer.appendChild(groupEl);
+      });
+
+      contentEl.appendChild(closingContainer);
+    }
+
     container.appendChild(sectionFragment);
   });
 
@@ -2281,13 +2878,24 @@ function bindControls() {
       storage.clear();
       Object.keys(savedState.tasks).forEach((key) => delete savedState.tasks[key]);
       Object.keys(savedState.options).forEach((key) => delete savedState.options[key]);
-      if ('closing' in savedState) delete savedState.closing;
+      Object.keys(savedState.closing || {}).forEach((key) => delete savedState.closing[key]);
+      savedState.closing = {};
       document.querySelectorAll('input[type="checkbox"]').forEach((input) => {
         input.checked = false;
       });
       document
         .querySelectorAll('input[type="radio"]:checked')
         .forEach((input) => (input.checked = false));
+      document.querySelectorAll('[data-closing-response]').forEach((input) => {
+        input.checked = false;
+      });
+      document.querySelectorAll('[data-closing-note]').forEach((element) => {
+        element.value = '';
+        const wrapper = element.closest('.closing-item__note');
+        if (wrapper) {
+          wrapper.removeAttribute('data-required');
+        }
+      });
       updateProgress();
       document
         .querySelectorAll('.section__insights')
@@ -2414,6 +3022,23 @@ function computeSectionPreview(section) {
         text: labels.length ? labels.join(', ') : 'No selections',
       });
     }
+  });
+
+  (helpers.closing || []).forEach((item) => {
+    const baseLabel = item.label || item.prompt;
+    let text = '';
+    if (item.type === 'response') {
+      const responseLabel = item.response ? item.response.toUpperCase() : 'Not captured';
+      const note = item.note && item.note.trim() ? ` – ${item.note.trim()}` : '';
+      text = `${responseLabel}${note}`;
+    } else {
+      text = item.note && item.note.trim() ? item.note.trim() : 'Not documented';
+    }
+    items.push({
+      label: baseLabel,
+      state: item.completed ? 'complete' : 'pending',
+      text,
+    });
   });
 
   const crossCheck = section.crossCheck ? section.crossCheck(helpers) : null;

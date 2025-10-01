@@ -35,6 +35,7 @@ Then browse to [http://localhost:8000](http://localhost:8000).
 - **Environment preview:** Generate a read-only summary for sharing and verification reviews.
 - **Shareable links:** Encode checklist progress into a URL so teammates can load the same state instantly.
 - **Demo overlay:** Showcase a guided walkthrough without affecting saved progress.
+- **Closing checklist:** Capture installation confirmation steps, miscellaneous requirements, and network notes with tracked responses.
 
 ## License
 
