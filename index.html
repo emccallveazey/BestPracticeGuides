@@ -489,14 +489,9 @@ button.secondary:focus-visible {
   accent-color: var(--clarity-orange);
 }
 
-.task__details summary {
-  font-weight: 600;
-  color: var(--clarity-blue);
-  cursor: pointer;
-}
-
 .task__description {
-  margin-top: 0.6rem;
+  margin: 0;
+  margin-left: 2.1rem;
   color: var(--text-muted);
   font-size: 0.95rem;
 }
@@ -516,6 +511,96 @@ button.secondary:focus-visible {
   min-width: 6rem;
   border-bottom: 1px dashed var(--border);
   height: 0.85em;
+}
+
+.options__note {
+  display: grid;
+  gap: 0.5rem;
+  margin-top: 0.9rem;
+}
+
+.options__note-label {
+  font-weight: 600;
+  color: var(--clarity-navy);
+}
+
+.options__note textarea {
+  width: 100%;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  padding: 0.65rem 0.75rem;
+  font-family: inherit;
+  font-size: 0.95rem;
+  resize: vertical;
+  min-height: 3.2rem;
+  background: var(--surface);
+  color: var(--text);
+}
+
+.options__note textarea:focus-visible {
+  outline: 3px solid rgba(255, 159, 77, 0.45);
+  outline-offset: 2px;
+}
+
+.summary-export {
+  margin-top: 2.5rem;
+  padding: 1.75rem;
+  border-radius: 16px;
+  border: 1px solid rgba(226, 107, 10, 0.3);
+  background: linear-gradient(135deg, rgba(255, 159, 77, 0.24), rgba(226, 107, 10, 0.12));
+  display: grid;
+  gap: 1rem;
+}
+
+.summary-export h2 {
+  margin: 0;
+  color: var(--clarity-navy);
+}
+
+.summary-export p {
+  margin: 0;
+  color: var(--text-muted);
+}
+
+.summary-export__output {
+  width: 100%;
+  min-height: 200px;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  padding: 1rem;
+  font-family: 'Nunito Sans', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  font-size: 0.95rem;
+  background: var(--surface);
+  color: var(--text);
+  resize: vertical;
+}
+
+.summary-export__output[readonly] {
+  cursor: text;
+}
+
+.summary-export__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  align-items: center;
+}
+
+.summary-export__status {
+  font-weight: 600;
+  color: var(--clarity-navy);
+}
+
+.summary-export__status[data-tone='success'] {
+  color: var(--success);
+}
+
+.summary-export__status[data-tone='warning'] {
+  color: var(--warning);
+}
+
+.summary-export__status[data-tone='error'] {
+  color: var(--danger);
 }
 
 .options {
@@ -1087,6 +1172,32 @@ button.secondary:focus-visible {
         </section>
 
         <div id="checklist" class="checklist" aria-live="polite"></div>
+
+        <section class="summary-export" aria-labelledby="summary-title">
+          <h2 id="summary-title">Copy Summary for Confirmation</h2>
+          <p>
+            This summary compiles the items you have completed or documented so
+            you can paste them into another system when handing off the account.
+          </p>
+          <textarea
+            id="summary-output"
+            class="summary-export__output"
+            readonly
+            placeholder="Completed checklist selections will appear here for easy copying."
+          ></textarea>
+          <div class="summary-export__actions">
+            <button id="summary-copy" type="button" class="secondary">
+              Copy Summary
+            </button>
+            <span
+              id="summary-status"
+              class="summary-export__status"
+              role="status"
+              aria-live="polite"
+              hidden
+            ></span>
+          </div>
+        </section>
       </main>
 
       <aside
@@ -1185,10 +1296,7 @@ button.secondary:focus-visible {
           <input type="checkbox" />
           <span class="task__text"></span>
         </label>
-        <details class="task__details">
-          <summary>Details &amp; Notes</summary>
-          <div class="task__description"></div>
-        </details>
+        <p class="task__description"></p>
       </div>
     </template>
 
@@ -1278,6 +1386,12 @@ const checklistData = [
         legend: 'After-hours routing preference (Default/AfterHours Rule)',
         description:
           'Capture the selected after-hours handling so you can audit it later.',
+        noteField: {
+          id: 'after-hours-notes',
+          label: 'After-hours routing details',
+          placeholder: 'Document the voicemail box, forward-to number, or answering service instructions.',
+          previewLabel: 'After-hours routing details',
+        },
         choices: [
           {
             value: 'voicemail',
@@ -1383,6 +1497,71 @@ const checklistData = [
         return {
           tone: 'success',
           message: 'Call Queue 301 is production-ready.',
+        };
+      }
+      return {
+        tone: 'warning',
+        message: pending.join(' '),
+      };
+    },
+  },
+  {
+    id: 'additional',
+    title: 'Additional Required Configuration',
+    intro:
+      'Finalize the domain-wide settings, recordings, and integrations that support the franchise’s workflow.',
+    tasks: [
+      {
+        id: 'extension-config',
+        label: 'Configure each extension profile',
+        description:
+          'Add user names, enable voicemail-to-email, configure simul-ring to mobile devices, and turn on voicemail transcription.',
+      },
+      {
+        id: 'call-recording',
+        label: 'Enable call recording for all users/queues',
+        description:
+          'Either enable recordings individually or activate domain-wide recording if all call paths require retention.',
+      },
+      {
+        id: 'default-moh',
+        label: 'Upload “Mr. Handyman MOH” audio',
+        description:
+          'Set the uploaded file as the default Music on Hold for the account.',
+      },
+      {
+        id: 'service-titan',
+        label: 'Configure ServiceTitan integrations (if applicable)',
+        description:
+          'Follow the ServiceTitan wiki for inbound forwarding and outbound click-to-call settings. Note any API credentials or login requirements.',
+      },
+      {
+        id: 'efax',
+        label: 'Activate eFax service',
+        description:
+          'Confirm the owner’s preferred email address and finalize eFax routing.',
+      },
+    ],
+    suggestions: (state) => {
+      if (!state.byId('default-moh')) {
+        return 'Upload the Mr. Handyman MOH file early; large audio files can take time to transcode.';
+      }
+      if (!state.byId('service-titan')) {
+        return 'Coordinate with the ServiceTitan admin to verify API access before attempting configuration.';
+      }
+      return 'Consider documenting call recording retention timelines and who can retrieve the recordings.';
+    },
+    crossCheck: (state) => {
+      const pending = [];
+      if (!state.byId('extension-config')) pending.push('Extension profiles still need updates.');
+      if (!state.byId('call-recording')) pending.push('Call recording not enabled everywhere.');
+      if (!state.byId('default-moh')) pending.push('Default Music on Hold not uploaded.');
+      if (!state.byId('service-titan')) pending.push('ServiceTitan integration unchecked.');
+      if (!state.byId('efax')) pending.push('eFax activation not confirmed.');
+      if (!pending.length) {
+        return {
+          tone: 'success',
+          message: 'Additional configuration items are complete.',
         };
       }
       return {
@@ -1684,71 +1863,6 @@ const checklistData = [
       },
     ],
   },
-  {
-    id: 'additional',
-    title: 'Additional Required Configuration',
-    intro:
-      'Finalize the domain-wide settings, recordings, and integrations that support the franchise’s workflow.',
-    tasks: [
-      {
-        id: 'extension-config',
-        label: 'Configure each extension profile',
-        description:
-          'Add user names, enable voicemail-to-email, configure simul-ring to mobile devices, and turn on voicemail transcription.',
-      },
-      {
-        id: 'call-recording',
-        label: 'Enable call recording for all users/queues',
-        description:
-          'Either enable recordings individually or activate domain-wide recording if all call paths require retention.',
-      },
-      {
-        id: 'default-moh',
-        label: 'Upload “Mr. Handyman MOH” audio',
-        description:
-          'Set the uploaded file as the default Music on Hold for the account.',
-      },
-      {
-        id: 'service-titan',
-        label: 'Configure ServiceTitan integrations (if applicable)',
-        description:
-          'Follow the ServiceTitan wiki for inbound forwarding and outbound click-to-call settings. Note any API credentials or login requirements.',
-      },
-      {
-        id: 'efax',
-        label: 'Activate eFax service',
-        description:
-          'Confirm the owner’s preferred email address and finalize eFax routing.',
-      },
-    ],
-    suggestions: (state) => {
-      if (!state.byId('default-moh')) {
-        return 'Upload the Mr. Handyman MOH file early; large audio files can take time to transcode.';
-      }
-      if (!state.byId('service-titan')) {
-        return 'Coordinate with the ServiceTitan admin to verify API access before attempting configuration.';
-      }
-      return 'Consider documenting call recording retention timelines and who can retrieve the recordings.';
-    },
-    crossCheck: (state) => {
-      const pending = [];
-      if (!state.byId('extension-config')) pending.push('Extension profiles still need updates.');
-      if (!state.byId('call-recording')) pending.push('Call recording not enabled everywhere.');
-      if (!state.byId('default-moh')) pending.push('Default Music on Hold not uploaded.');
-      if (!state.byId('service-titan')) pending.push('ServiceTitan integration unchecked.');
-      if (!state.byId('efax')) pending.push('eFax activation not confirmed.');
-      if (!pending.length) {
-        return {
-          tone: 'success',
-          message: 'Additional configuration items are complete.',
-        };
-      }
-      return {
-        tone: 'warning',
-        message: pending.join(' '),
-      };
-    },
-  },
 ];
 
 function encodeSharedState(data) {
@@ -1928,10 +2042,11 @@ const storage = {
       return {
         tasks: parsed.tasks || {},
         options: parsed.options || {},
+        closing: parsed.closing || {},
       };
     } catch (error) {
       console.warn('Unable to read saved state:', error);
-      return { tasks: {}, options: {} };
+      return { tasks: {}, options: {}, closing: {} };
     }
   },
   save(state) {
@@ -1958,6 +2073,10 @@ if (!savedState.closing) savedState.closing = {};
 let shareStatusElement = null;
 let pendingShareImportMessage = '';
 let pendingShareImportTone = 'info';
+let summaryOutputElement = null;
+let summaryCopyButton = null;
+let summaryStatusElement = null;
+let summaryStatusTimer = null;
 
 const sharedStateLoadResult = loadSharedStateFromUrl();
 if (sharedStateLoadResult.status === 'success') {
@@ -2118,6 +2237,114 @@ function setShareStatus(message, tone = 'info', link) {
     linkBlock.appendChild(anchor);
 
     shareStatusElement.appendChild(linkBlock);
+  }
+}
+
+function setSummaryStatus(message = '', tone = 'info') {
+  if (!summaryStatusElement) return;
+
+  if (summaryStatusTimer) {
+    clearTimeout(summaryStatusTimer);
+    summaryStatusTimer = null;
+  }
+
+  if (!message) {
+    summaryStatusElement.textContent = '';
+    summaryStatusElement.hidden = true;
+    summaryStatusElement.removeAttribute('data-tone');
+    return;
+  }
+
+  summaryStatusElement.textContent = message;
+  summaryStatusElement.dataset.tone = tone;
+  summaryStatusElement.hidden = false;
+
+  summaryStatusTimer = setTimeout(() => {
+    summaryStatusElement.textContent = '';
+    summaryStatusElement.hidden = true;
+    summaryStatusElement.removeAttribute('data-tone');
+    summaryStatusTimer = null;
+  }, 4000);
+}
+
+function buildSummaryText(snapshot) {
+  const lines = [];
+  const data = snapshot || getPreviewSnapshot();
+
+  lines.push('Mr. Handyman Best Practices Checklist Summary');
+  lines.push(
+    `Overall Progress: ${data.completed}/${data.total} items captured (${data.percent}%)`
+  );
+
+  data.sections.forEach((section) => {
+    const completedItems = section.items.filter((item) => item.state === 'complete');
+    if (!completedItems.length) {
+      return;
+    }
+
+    lines.push('');
+    lines.push(section.title);
+    completedItems.forEach((item) => {
+      lines.push(`- ${item.label}: ${item.text}`);
+    });
+  });
+
+  return lines.join('\n');
+}
+
+function updateSummaryExport(snapshot) {
+  if (!summaryOutputElement) return;
+
+  const text = buildSummaryText(snapshot);
+  summaryOutputElement.value = text;
+}
+
+async function copySummaryToClipboard() {
+  if (!summaryOutputElement) return;
+
+  const text = summaryOutputElement.value.trim();
+  if (!text) {
+    setSummaryStatus(
+      'No summary available yet. Complete checklist items to generate content.',
+      'warning'
+    );
+    return;
+  }
+
+  try {
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      await navigator.clipboard.writeText(summaryOutputElement.value);
+    } else {
+      summaryOutputElement.focus({ preventScroll: true });
+      summaryOutputElement.select();
+      const successful = document.execCommand('copy');
+      summaryOutputElement.setSelectionRange(
+        summaryOutputElement.value.length,
+        summaryOutputElement.value.length
+      );
+      if (!successful) {
+        throw new Error('Copy command was unsuccessful.');
+      }
+    }
+    setSummaryStatus('Summary copied to clipboard.', 'success');
+  } catch (error) {
+    console.warn('Failed to copy summary', error);
+    try {
+      summaryOutputElement.focus({ preventScroll: true });
+      summaryOutputElement.select();
+      const successful = document.execCommand('copy');
+      summaryOutputElement.setSelectionRange(
+        summaryOutputElement.value.length,
+        summaryOutputElement.value.length
+      );
+      if (successful) {
+        setSummaryStatus('Summary copied to clipboard.', 'success');
+        return;
+      }
+    } catch (fallbackError) {
+      console.warn('Fallback copy failed', fallbackError);
+    }
+    setSummaryStatus('Unable to access the clipboard. Copy the text manually.', 'error');
   }
 }
 
@@ -2550,8 +2777,10 @@ function renderChecklist() {
       const descriptionEl = taskFragment.querySelector('.task__description');
       if (task.descriptionHtml) {
         descriptionEl.innerHTML = task.descriptionHtml;
+      } else if (task.description) {
+        descriptionEl.textContent = task.description;
       } else {
-        descriptionEl.textContent = task.description || 'Add notes as needed.';
+        descriptionEl.remove();
       }
 
       contentEl.appendChild(taskFragment);
@@ -2626,6 +2855,37 @@ function renderChecklist() {
 
         fieldset.appendChild(optionNode);
       });
+
+      if (group.noteField) {
+        const noteWrapper = document.createElement('label');
+        noteWrapper.className = 'options__note';
+
+        const noteLabel = document.createElement('span');
+        noteLabel.className = 'options__note-label';
+        noteLabel.textContent = group.noteField.label;
+        noteWrapper.appendChild(noteLabel);
+
+        const noteField = document.createElement('textarea');
+        noteField.rows = group.noteField.rows || 2;
+        noteField.placeholder = group.noteField.placeholder || '';
+        const noteId = group.noteField.id;
+        const savedNote = typeof savedState.options[noteId] === 'string' ? savedState.options[noteId] : '';
+        noteField.value = savedNote;
+
+        noteField.addEventListener('input', () => {
+          const value = noteField.value;
+          if (value && value.trim()) {
+            savedState.options[noteId] = value;
+          } else {
+            delete savedState.options[noteId];
+          }
+          storage.save(savedState);
+          updateProgress();
+        });
+
+        noteWrapper.appendChild(noteField);
+        fieldset.appendChild(noteWrapper);
+      }
 
       contentEl.appendChild(optionFragment);
     });
@@ -2859,6 +3119,7 @@ function updateProgress() {
   renderLivePreview(snapshot);
   refreshPreviewIfOpen(snapshot);
   refreshSectionInsights();
+  updateSummaryExport(snapshot);
 }
 
 function bindControls() {
@@ -2938,6 +3199,12 @@ function bindControls() {
 function init() {
   renderChecklist();
   bindControls();
+  summaryOutputElement = document.getElementById('summary-output');
+  summaryCopyButton = document.getElementById('summary-copy');
+  summaryStatusElement = document.getElementById('summary-status');
+  if (summaryCopyButton) {
+    summaryCopyButton.addEventListener('click', copySummaryToClipboard);
+  }
   livePreviewContainer = document.getElementById('live-preview');
   livePreviewBody = livePreviewContainer
     ? livePreviewContainer.querySelector('.live-preview__body')
@@ -3022,13 +3289,26 @@ function computeSectionPreview(section) {
         text: labels.length ? labels.join(', ') : 'No selections',
       });
     }
+
+    if (group.noteField) {
+      const noteId = group.noteField.id;
+      const raw = savedState.options[noteId];
+      const trimmed = typeof raw === 'string' ? raw.trim() : '';
+      items.push({
+        label: group.noteField.previewLabel || group.noteField.label,
+        state: trimmed ? 'complete' : 'pending',
+        text: trimmed || 'Not documented',
+      });
+    }
   });
 
   (helpers.closing || []).forEach((item) => {
     const baseLabel = item.label || item.prompt;
     let text = '';
     if (item.type === 'response') {
-      const responseLabel = item.response ? item.response.toUpperCase() : 'Not captured';
+      const responseMap = { yes: 'Yes', na: 'N/A', no: 'No' };
+      const responseKey = item.response ? item.response.toLowerCase() : '';
+      const responseLabel = responseMap[responseKey] || (item.response ? item.response : 'Not captured');
       const note = item.note && item.note.trim() ? ` – ${item.note.trim()}` : '';
       text = `${responseLabel}${note}`;
     } else {
