@@ -1,44 +1,41 @@
 # Mr. Handyman Best Practices Checklist
 
-This repository contains an interactive checklist that guides franchise teams through the Mr. Handyman best practices for call routing, time frames, and required configuration. The app ships as static HTML, CSS, and JavaScript so it can run entirely in the browser while persisting progress locally.
+This repository contains a single-page, self-contained HTML application that helps franchise teams verify Mr. Handyman call routing, time frame, and configuration requirements. The checklist persists progress in the browser so work can pause and resume without losing context.
 
-## Run it from GitHub Pages
+## Deploy on GitHub Pages
 
-1. Commit this repository to GitHub.
+1. Push this repository to GitHub.
 2. Open the repository **Settings → Pages** configuration.
-3. Choose the `main` branch and set the publishing source to the `/docs` folder.
-4. Save the settings. GitHub Pages will build and host the interactive checklist at `https://<your-username>.github.io/<repository-name>/`.
+3. Choose the `main` branch and set the publishing source to the **root** directory.
+4. Save the settings. GitHub Pages will publish the site at `https://<your-username>.github.io/<repository-name>/`.
 
-The `docs/` directory already includes the fully interactive experience—once Pages is enabled, stakeholders can visit the published URL and start using the checklist immediately.
-
-## Run on Replit
-
-You can deploy the checklist to a free [Replit](https://replit.com/) workspace for teams that prefer a hosted, always-on preview:
-
-1. Create a new Replit project and import this GitHub repository.
-2. Replit will detect the included `.replit`, `replit.nix`, and `package.json` files and automatically install Node.js plus the dependencies the first time it runs.
-3. When the install finishes, the repl launches `http-server` on port 3000 and exposes the interactive checklist at the public Replit URL.
-
-Any time you push new commits, use Replit’s **Pull latest** button to refresh the deployment.
+Because the app is a standalone `index.html` file (with embedded CSS and JavaScript), no build step or additional assets are required for deployment.
 
 ## Preview locally
 
-You can also open the checklist directly from the filesystem or serve it through any static web server. For example, with Python installed:
+Open `index.html` in any modern browser. For example, on macOS you can run:
 
 ```bash
-python -m http.server --directory docs 8000
+open index.html
 ```
 
-Then browse to [http://localhost:8000](http://localhost:8000) to use the checklist.
+Or serve it through a lightweight static server:
 
-## Environment preview
+```bash
+python -m http.server 8000
+```
 
-Select **Environment Preview** inside the app to review a read-only summary of the captured configuration. The preview aggregates task completion across sections and highlights items that still need attention, making it easy to share the current environment posture with stakeholders.
+Then browse to [http://localhost:8000](http://localhost:8000).
 
-## Share a saved checklist
+## Features
 
-When you’re ready to hand progress to another teammate, choose **Share Progress Link**. The app will generate a unique URL that captures the current checklist selections. Copy or share the link so others can load the same state instantly—once opened, the shared progress is stored locally on their device so they can continue working.
+- **Interactive checklist:** Track completion across best-practice sections, with progress saved locally.
+- **AI suggestions:** Launch ChatGPT from each section for quick follow-up guidance.
+- **Cross-check tools:** Highlight missing information and surface insight callouts while you work.
+- **Environment preview:** Generate a read-only summary for sharing and verification reviews.
+- **Shareable links:** Encode checklist progress into a URL so teammates can load the same state instantly.
+- **Demo overlay:** Showcase a guided walkthrough without affecting saved progress.
 
-## AI guidance and walkthrough
+## License
 
-Each section’s **AI Suggestions** link opens ChatGPT in a new tab so you can ask follow-up questions or craft implementation notes. The **Mr.Handyman Best Practies Checklist** button loads a guided walkthrough with sample data so you can highlight progress tracking, cross-checks, sharing, and previews during live presentations. End the demo at any time to return to your saved progress.
+This project is provided for internal franchise enablement and does not include a specific open-source license.
